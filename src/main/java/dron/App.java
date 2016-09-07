@@ -1,6 +1,7 @@
 package dron;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,11 +18,13 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,16 +32,32 @@ public class App extends Application {
     public static final String testDirectory = "C:\\projects\\debug";
 
     private static Session currentSession;
+    private static List<Session> sessions;
     private static Stage mainStage;
 
     @Override
     public void start(Stage primaryStage) {
-        Session t = new Session("test_save");
-        t.addWord(new Word("f", "r", "fh", "rh"));
-        t.save();
+        sessions = new ArrayList<>();
+        try {
+            List<File> files = Files.walk(Paths.get(testDirectory))
+                    .filter(Files::isRegularFile)
+                    .map(Path::toFile)
+                    .collect(Collectors.toList());
+            for (File file : files) {
+                sessions.add(new Session(file));
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
 
 
         mainStage = primaryStage;
+        mainStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                System.exit(0);
+            }
+        });
         Button btn = new Button();
         btn.setText("Say 'Hello World'");
         btn.setOnAction(new EventHandler<ActionEvent>() {
@@ -56,7 +75,7 @@ public class App extends Application {
         root.getChildren().add(newNote);
         root.getChildren().add(btn);
 
-        Scene scene = new Scene(getSessionHbox(), 300, 250);
+        Scene scene = new Scene(getInitialPane(), 300, 250);
 
         mainStage.setTitle("Hello World!");
         mainStage.setScene(scene);
@@ -71,104 +90,113 @@ public class App extends Application {
         GridPane addWordForm = new GridPane();
         addWordForm.setGridLinesVisible(true);
 
-        TextField foreign = new TextField("foreign");
-        foreign.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                foreign.setText("");
-            }
-        });
-        TextField native_ = new TextField("native");
-        native_.setOnMouseClicked((ev) ->{native_.setText("");});
-        TextField foreign_hint = new TextField("foreign hint");
-        TextField native_hint = new TextField("native hint");
-        foreign_hint.setOnMouseClicked((ev) ->{foreign_hint.setText("");});
-        native_hint.setOnMouseClicked((ev) ->{native_hint.setText("");});
+        TextField foreign = new TextField();
+        TextField original = new TextField();
 
+        foreign.setPromptText("foreign");
+        original.setPromptText("translation");
+
+        foreign.setOnMouseClicked((ev) -> foreign.setText(""));
+        foreign.setOnAction((ev) -> {
+            original.setText("");
+            original.requestFocus();
+        });
+        original.setOnMouseClicked((ev) -> original.setText(""));
+        original.setOnAction((ev) -> {
+            currentSession.addWord(new Word(foreign.getText(), original.getText()));
+
+            foreign.setText("");
+            original.setText("");
+
+            currentSession.save();
+
+            foreign.requestFocus();
+        });
 
 
         addWordForm.add(foreign, 0, 0);
-        addWordForm.add(native_, 1, 0);
-        addWordForm.add(foreign_hint, 0, 1);
-        addWordForm.add(native_hint, 1, 1);
+        addWordForm.add(original, 1, 0);
         Button addWordButton = new Button("add");
         addWordButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                currentSession.addWord(new Word(foreign.getText(), native_.getText(),
-                        foreign_hint.getText(), native_hint.getText()));
+                currentSession.addWord(new Word(foreign.getText(), original.getText()));
                 foreign.setText("");
-                native_.setText("");
-                foreign_hint.setText("");
-                native_hint.setText("");
+                original.setText("");
 
-                System.out.println("before save");
-                currentSession.print();
                 currentSession.save();
-                currentSession.print();
             }
         });
-        addWordForm.add(addWordButton, 1, 2);
+        addWordForm.add(addWordButton, 1, 1);
+        Button backButton = new Button("back");
+        backButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                sessions.add(currentSession);
+                mainStage.setScene(new Scene(getInitialPane(), 300, 250));
+            }
+        });
+        addWordForm.add(backButton, 1, 2);
         return addWordForm;
     }
 
-    private static GridPane getSessionViewPane() {
-        GridPane grid = new GridPane();
-        grid.setHgap(50);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(10, 10, 10, 10));
-
-        Text foreign = new Text("foreign");
-        Text translation = new Text("иностранный");
-
-        Text foreign_hint = new Text("adjective");
-        Text translation_hint = new Text("прилагательное");
-
-        VBox left = new VBox();
-        VBox right = new VBox();
-        left.getChildren().addAll(foreign, foreign_hint);
-        right.getChildren().addAll(translation, translation_hint);
-
-        grid.add(left, 0, 0);
-        grid.add(right, 1, 0);
-        //grid.addRow(1, foreign, translation);
-
-        return grid;
-    }
-
-    private static HBox getSessionHbox() {
-        HBox sessionBox = new HBox(10);
-        ChoiceBox sessions = new ChoiceBox();
-        ObservableList names = FXCollections.observableArrayList();
+    private static VBox getInitialPane() {
+        VBox mainBox = new VBox(20);
+        HBox hBox = new HBox(10);
+        ComboBox<String> sessionsBox = new ComboBox<>();
+        ObservableList<String> names = FXCollections.observableArrayList();
         names.add("new session");
-        names.add("fffff");
 
-        try {
-            List<File> files = Files.walk(Paths.get(testDirectory))
-                    .filter(Files::isRegularFile)
-                    .map(Path::toFile)
-                    .collect(Collectors.toList());
-            for (File file : files) {
-                names.add(file.getName());
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
+        for (Session s : sessions) {
+            names.add(s.getName());
         }
 
-        sessions.setItems(names);
-        sessionBox.getChildren().add(sessions);
+        sessionsBox.setItems(names);
+        hBox.getChildren().add(sessionsBox);
+        mainBox.getChildren().add(hBox);
 
-        sessions.getSelectionModel().selectedIndexProperty().addListener(
-                (ObservableValue<? extends Number> ov, Number old_val, Number new_val) -> {
-                    TextField sessionName = new TextField("New session");
-                    sessionBox.getChildren().add(sessionName);
-                    sessionName.setOnAction((event) -> {
-                        currentSession = new Session(sessionName.getText());
-                        mainStage.setScene(new Scene(getAddWordPane(), 300, 250));
-                    });
+        sessionsBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                TextField sessionName = new TextField("New session");
+
+                if (sessionsBox.getValue().equals("new session")) {
+                    hBox.getChildren().add(sessionName);
+                } else {
+                    if (hBox.getChildren().size() > 1)
+                        hBox.getChildren().remove(1);
+                    if (mainBox.getChildren().size() > 1)
+                        mainBox.getChildren().remove(1);
+
+                    Session displayed = sessions.stream()
+                            .filter(s -> s.getName().equals(sessionsBox.getValue()))
+                            .collect(Collectors.toList()).get(0);
+                    mainBox.getChildren().add(getSessionWordsPane(displayed));
                 }
-        );
 
-        return sessionBox;
+                sessionName.setOnAction((event) -> {
+                    currentSession = new Session(sessionName.getText());
+                    mainStage.setScene(new Scene(getAddWordPane(), 300, 250));
+                });
+            }
+        });
+
+        return mainBox;
+    }
+
+    private static GridPane getSessionWordsPane(Session session) {
+        GridPane gridPane = new GridPane();
+        int rowIndex = 0;
+        for (Word word : session.getWords()) {
+            Text foreign = new Text(word.getForeign());
+            Text original = new Text(word.getOriginal());
+            gridPane.addRow(rowIndex, foreign, original);
+            rowIndex++;
+        }
+        gridPane.setHgap(20);
+        gridPane.setVgap(10);
+        gridPane.setPadding(new Insets(10, 10, 10, 10));
+
+        return gridPane;
     }
 }

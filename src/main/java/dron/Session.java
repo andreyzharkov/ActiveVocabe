@@ -1,6 +1,8 @@
 package dron;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +19,38 @@ public class Session {
         words = new ArrayList<>();
     }
 
-    public void addWord(Word word){
+    public Session(File file) {
+        words = new ArrayList<>();
+        try {
+            try (BufferedReader in = new BufferedReader(new FileReader(file.getAbsoluteFile()))) {
+                if ((sessionName = in.readLine()) == null) System.err.println("BAD SESSION FILE!");
+                String ru, eng;
+                int knowledge;
+                String s;
+                while (true) {
+                    if ((eng = in.readLine()) == null) break;
+                    if ((ru = in.readLine()) == null) break;
+                    if ((s = in.readLine()) == null) break;
+                    knowledge = Integer.parseInt(s);
+                    words.add(new Word(eng, ru, knowledge));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addWord(Word word) {
         words.add(word);
     }
 
-    public void print(){
+    public void print() {
         System.out.println(sessionName);
         System.out.println(words);
+    }
+
+    public int getLength() {
+        return words.size();
     }
 
     public void save() {
@@ -43,5 +70,13 @@ public class Session {
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
+    }
+
+    public List<Word> getWords() {
+        return words;
+    }
+
+    public String getName() {
+        return sessionName;
     }
 }

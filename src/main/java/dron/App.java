@@ -8,6 +8,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.InputMethodEvent;
@@ -19,6 +20,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.util.Pair;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -26,17 +28,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class App extends Application {
     public static final String testDirectory = "C:\\projects\\debug";
 
-    private static Session currentSession;
-    private static List<Session> sessions;
-    private static Stage mainStage;
+    private Session currentSession;
+    private List<Session> sessions;
+    private Stage mainStage;
 
-    @Override
-    public void start(Stage primaryStage) {
+    public App() {
         sessions = new ArrayList<>();
         try {
             List<File> files = Files.walk(Paths.get(testDirectory))
@@ -49,8 +51,10 @@ public class App extends Application {
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
+    }
 
-
+    @Override
+    public void start(Stage primaryStage) {
         mainStage = primaryStage;
         mainStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
@@ -58,26 +62,10 @@ public class App extends Application {
                 System.exit(0);
             }
         });
-        Button btn = new Button();
-        btn.setText("Say 'Hello World'");
-        btn.setOnAction(new EventHandler<ActionEvent>() {
 
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Hello World!");
-            }
-        });
+        Scene scene = new Scene(getInitialPane(), 500, 600);
 
-        TextArea newNote = new TextArea("Enter your note here");
-
-
-        StackPane root = new StackPane();
-        root.getChildren().add(newNote);
-        root.getChildren().add(btn);
-
-        Scene scene = new Scene(getInitialPane(), 300, 250);
-
-        mainStage.setTitle("Hello World!");
+        mainStage.setTitle("Active Vocabe");
         mainStage.setScene(scene);
         mainStage.show();
     }
@@ -86,7 +74,11 @@ public class App extends Application {
         launch(args);
     }
 
-    private static GridPane getAddWordPane() {
+    private Dialog<Boolean> getAddWordPane() {
+        Dialog<Boolean> dialog = new Dialog<>();
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.FINISH, ButtonType.CANCEL);
+        dialog.setResult(false);
+
         GridPane addWordForm = new GridPane();
         addWordForm.setGridLinesVisible(true);
 
@@ -111,36 +103,42 @@ public class App extends Application {
             currentSession.save();
 
             foreign.requestFocus();
+            dialog.setResult(true);
         });
 
 
         addWordForm.add(foreign, 0, 0);
         addWordForm.add(original, 1, 0);
-        Button addWordButton = new Button("add");
-        addWordButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                currentSession.addWord(new Word(foreign.getText(), original.getText()));
-                foreign.setText("");
-                original.setText("");
 
-                currentSession.save();
-            }
-        });
-        addWordForm.add(addWordButton, 1, 1);
-        Button backButton = new Button("back");
-        backButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
+// Почему-то это не прокатывает. При нажатии на кнопки обработчики не вызываются
+//        Node applyBtn = dialog.getDialogPane().lookupButton(ButtonType.APPLY);
+//        Node finishBtn = dialog.getDialogPane().lookupButton(ButtonType.FINISH);
+//
+//        applyBtn.setOnMouseClicked(event -> {
+//            System.out.println("apply");
+//            currentSession.addWord(new Word(foreign.getText(), original.getText()));
+//            foreign.setText("");
+//            original.setText("");
+//            currentSession.save();
+//        });
+//        finishBtn.setOnMouseClicked(event -> {
+//            dialog.close();
+//            System.out.println("finish");
+//        });
+
+        dialog.getDialogPane().setContent(addWordForm);
+        dialog.setTitle("Add word");
+        dialog.setResultConverter((e) -> {
+            System.out.println(dialog.getResult());
+            if (dialog.getResult()){
                 sessions.add(currentSession);
-                mainStage.setScene(new Scene(getInitialPane(), 300, 250));
             }
+            return dialog.getResult();
         });
-        addWordForm.add(backButton, 1, 2);
-        return addWordForm;
+        return dialog;
     }
 
-    private static VBox getInitialPane() {
+    private VBox getInitialPane() {
         VBox mainBox = new VBox(20);
         HBox hBox = new HBox(10);
         ComboBox<String> sessionsBox = new ComboBox<>();
@@ -158,7 +156,8 @@ public class App extends Application {
         sessionsBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                TextField sessionName = new TextField("New session");
+                TextField sessionName = new TextField();
+                sessionName.setPromptText("session name");
 
                 if (sessionsBox.getValue().equals("new session")) {
                     hBox.getChildren().add(sessionName);
@@ -171,20 +170,29 @@ public class App extends Application {
                     Session displayed = sessions.stream()
                             .filter(s -> s.getName().equals(sessionsBox.getValue()))
                             .collect(Collectors.toList()).get(0);
-                    mainBox.getChildren().add(getSessionWordsPane(displayed));
+
+                    ScrollPane scrollPane = new ScrollPane(getSessionWordsPane(displayed));
+                    mainBox.getChildren().add(scrollPane);
                 }
 
                 sessionName.setOnAction((event) -> {
                     currentSession = new Session(sessionName.getText());
-                    mainStage.setScene(new Scene(getAddWordPane(), 300, 250));
+                    getAddWordPane().showAndWait();
                 });
             }
         });
 
+        Button testBtn = new Button("Test");
+        testBtn.setOnAction((e) -> {
+            Optional<Pair<Integer, String>> result = getQuizSelectionDialog().showAndWait();
+            System.out.println(result);
+        });
+        mainBox.getChildren().add(testBtn);
+
         return mainBox;
     }
 
-    private static GridPane getSessionWordsPane(Session session) {
+    private GridPane getSessionWordsPane(Session session) {
         GridPane gridPane = new GridPane();
         int rowIndex = 0;
         for (Word word : session.getWords()) {
@@ -199,4 +207,74 @@ public class App extends Application {
 
         return gridPane;
     }
+
+    private Dialog<Pair<Integer, String>> getQuizSelectionDialog() {
+        Dialog<Pair<Integer, String>> dialog = new Dialog<>();
+        dialog.setTitle("Choose test format");
+
+        ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnOk, ButtonType.CANCEL);
+
+        Node okButton = dialog.getDialogPane().lookupButton(btnOk);
+        okButton.setDisable(true);
+
+        final ToggleGroup group = new ToggleGroup();
+
+        RadioButton rbRandom = new RadioButton("Random");
+        rbRandom.setToggleGroup(group);
+        rbRandom.setUserData("Random");
+
+        RadioButton rbWorst = new RadioButton("Worst");
+        rbWorst.setToggleGroup(group);
+        rbWorst.setUserData("Worst");
+
+        RadioButton rbSession = new RadioButton("Session");
+        rbSession.setToggleGroup(group);
+        rbSession.setUserData("Session");
+
+        ComboBox<String> sessionChoiceBox = new ComboBox<>();
+        sessionChoiceBox.setOnAction((ev) -> {
+            if (sessionChoiceBox.getValue() == null) {
+                okButton.setDisable(true);
+            } else {
+                okButton.setDisable(false);
+            }
+        });
+
+        ObservableList<String> names = FXCollections.observableArrayList();
+        names.addAll(sessions.stream().map(Session::getName).collect(Collectors.toList()));
+
+        group.selectedToggleProperty().addListener(
+                (ObservableValue<? extends Toggle> ov, Toggle old_toggle,
+                 Toggle new_toggle) -> {
+                    if (group.getSelectedToggle().getUserData().toString().equals("Session")) {
+                        sessionChoiceBox.setItems(names);
+                        sessionChoiceBox.setVisible(true);
+                        okButton.setDisable(true);
+                    } else {
+                        sessionChoiceBox.setVisible(false);
+                        sessionChoiceBox.setValue(null);
+                        okButton.setDisable(false);
+                    }
+                });
+
+        GridPane grid = new GridPane();
+        grid.add(rbRandom, 0, 0);
+        grid.add(rbWorst, 0, 1);
+        grid.add(rbSession, 0, 2);
+        grid.add(sessionChoiceBox, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == btnOk) {
+                return new Pair<>(Integer.parseInt(group
+                        .getSelectedToggle().getUserData().toString()), sessionChoiceBox.getValue());
+            }
+            return null;
+        });
+
+        return dialog;
+    }
+
+
 }

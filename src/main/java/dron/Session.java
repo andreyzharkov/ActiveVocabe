@@ -1,9 +1,6 @@
 package dron;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +19,8 @@ public class Session {
     public Session(File file) {
         words = new ArrayList<>();
         try {
-            try (BufferedReader in = new BufferedReader(new FileReader(file.getAbsoluteFile()))) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(file.getAbsoluteFile()), "UTF8"))) {
                 if ((sessionName = in.readLine()) == null) System.err.println("BAD SESSION FILE!");
                 String ru, eng;
                 int knowledge;

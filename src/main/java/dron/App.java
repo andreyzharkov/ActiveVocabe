@@ -29,24 +29,28 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class App extends Application {
     public static final String testDirectory = "C:\\projects\\debug";
 
     private Session currentSession;
+    private Session resentErrors;
     private List<Session> sessions;
     private Stage mainStage;
+    private ComboBox<String> sessionsBox;
 
     public App() {
         sessions = new ArrayList<>();
+        resentErrors = new Session("errors");
         try {
             List<File> files = Files.walk(Paths.get(testDirectory))
                     .filter(Files::isRegularFile)
                     .map(Path::toFile)
                     .collect(Collectors.toList());
             for (File file : files) {
-                sessions.add(new Session(file));
+                sessions.add(new Session(file, sessions.size()));
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -77,7 +81,6 @@ public class App extends Application {
     private Dialog<Boolean> getAddWordPane() {
         Dialog<Boolean> dialog = new Dialog<>();
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.FINISH, ButtonType.CANCEL);
-        dialog.setResult(false);
 
         GridPane addWordForm = new GridPane();
         addWordForm.setGridLinesVisible(true);
@@ -103,7 +106,6 @@ public class App extends Application {
             currentSession.save();
 
             foreign.requestFocus();
-            dialog.setResult(true);
         });
 
 
@@ -128,12 +130,14 @@ public class App extends Application {
 
         dialog.getDialogPane().setContent(addWordForm);
         dialog.setTitle("Add word");
-        dialog.setResultConverter((e) -> {
-            System.out.println(dialog.getResult());
-            if (dialog.getResult()){
+        dialog.setOnCloseRequest((e) -> {
+            if (!currentSession.getWords().isEmpty()) {
                 sessions.add(currentSession);
+                sessionsBox.getItems().add(currentSession.getName());
+                sessions.get(sessions.size() - 1).setId(sessions.size() - 1);
+                currentSession = null;
+                dialog.close();
             }
-            return dialog.getResult();
         });
         return dialog;
     }
@@ -141,7 +145,8 @@ public class App extends Application {
     private VBox getInitialPane() {
         VBox mainBox = new VBox(20);
         HBox hBox = new HBox(10);
-        ComboBox<String> sessionsBox = new ComboBox<>();
+        sessionsBox = new ComboBox<>();
+        sessionsBox.setId("sessionComboBox");
         ObservableList<String> names = FXCollections.observableArrayList();
         names.add("new session");
 
@@ -184,8 +189,8 @@ public class App extends Application {
 
         Button testBtn = new Button("Test");
         testBtn.setOnAction((e) -> {
-            Optional<Pair<Integer, String>> result = getQuizSelectionDialog().showAndWait();
-            System.out.println(result);
+            Optional<Pair<String, String>> result = getQuizSelectionDialog().showAndWait();
+            getQuizStage(1, result.get().getKey()).showAndWait();
         });
         mainBox.getChildren().add(testBtn);
 
@@ -208,8 +213,8 @@ public class App extends Application {
         return gridPane;
     }
 
-    private Dialog<Pair<Integer, String>> getQuizSelectionDialog() {
-        Dialog<Pair<Integer, String>> dialog = new Dialog<>();
+    private Dialog<Pair<String, String>> getQuizSelectionDialog() {
+        Dialog<Pair<String, String>> dialog = new Dialog<>();
         dialog.setTitle("Choose test format");
 
         ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
@@ -266,9 +271,21 @@ public class App extends Application {
 
         dialog.getDialogPane().setContent(grid);
         dialog.setResultConverter(dialogButton -> {
+            Stage quizStage;
+            int sizeOfQuiz = 10;
             if (dialogButton == btnOk) {
-                return new Pair<>(Integer.parseInt(group
-                        .getSelectedToggle().getUserData().toString()), sessionChoiceBox.getValue());
+                switch (group.getSelectedToggle().getUserData().toString()) {
+                    case "Random":
+                        quizStage = getQuizStage(sizeOfQuiz, "Random");
+                        break;
+                    case "Worst":
+                        quizStage = getQuizStage(sizeOfQuiz, "Worst");
+                        break;
+                    default:
+                        quizStage = getQuizStage(sizeOfQuiz, sessionChoiceBox.getValue());
+                }
+                return new Pair<>(group.getSelectedToggle()
+                        .getUserData().toString(), sessionChoiceBox.getValue());
             }
             return null;
         });
@@ -276,5 +293,45 @@ public class App extends Application {
         return dialog;
     }
 
+    private Stage getQuizStage(int size, String quizType) {
+        Random random = new Random();
+        List<Word> allWords = sessions.stream().map(Session::getWords).flatMap(l -> l.stream())
+                .collect(Collectors.toList());
 
+        if (quizType.equals("Random")) {
+            allWords.sort((a, b) -> random.nextInt(2));
+        }
+        List<Word> testWords = allWords.subList(0, size);
+
+        List<Pair<Integer, Integer>> wordsIds = new ArrayList<>(size);
+        testWords.forEach(word -> {
+            int sessionId = word.getSessionId();
+            int wordId = sessions.get(sessionId).getWords().indexOf(word);
+            wordsIds.add(new Pair<>(sessionId, wordId));
+        });
+
+        Stage quizStage = new Stage();
+        currentIndex = 0;
+        VBox vBox = new VBox();
+        Text question = new Text();
+        question.setText(testWords.get(0).getForeign());
+        TextField answer = new TextField();
+        answer.setPromptText("your answer");
+        answer.setOnAction((event) -> {
+            boolean correct = answer.getText().equals(testWords.get(currentIndex).getOriginal());
+            sessions.get(wordsIds.get(currentIndex).getKey()).getWords()
+                    .get(wordsIds.get(currentIndex).getValue()).updateKnowledge(correct);
+            if (!correct) {
+                resentErrors.addWord(testWords.get(currentIndex));
+            }
+            currentIndex++;
+            if (currentIndex == size) quizStage.close();
+        });
+        vBox.getChildren().addAll(question, answer);
+        Scene scene = new Scene(vBox);
+        quizStage.setScene(scene);
+        return quizStage;
+    }
+
+    private int currentIndex;
 }

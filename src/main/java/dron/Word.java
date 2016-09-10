@@ -19,6 +19,7 @@ public class Word {
     private String foreign;
     private String original;
     private int knowledge;
+    private int sessionId;
 
     public final String getForeign() {
         return foreign;
@@ -26,6 +27,19 @@ public class Word {
 
     public final String getOriginal() {
         return original;
+    }
+
+    public final int getSessionId() {
+        return sessionId;
+    }
+
+    public final void setSessionId(int id) {
+        sessionId = id;
+    }
+
+    public final void updateKnowledge(boolean answer){
+        if (answer) knowledge++;
+        else knowledge--;
     }
 
     @Override

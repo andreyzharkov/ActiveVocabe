@@ -16,7 +16,7 @@ public class Session {
         words = new ArrayList<>();
     }
 
-    public Session(File file) {
+    public Session(File file, int id) {
         words = new ArrayList<>();
         try {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(
@@ -30,7 +30,9 @@ public class Session {
                     if ((ru = in.readLine()) == null) break;
                     if ((s = in.readLine()) == null) break;
                     knowledge = Integer.parseInt(s);
-                    words.add(new Word(eng, ru, knowledge));
+                    Word w = new Word(eng, ru, knowledge);
+                    w.setSessionId(id);
+                    words.add(w);
                 }
             }
         } catch (Exception e) {
@@ -76,5 +78,9 @@ public class Session {
 
     public String getName() {
         return sessionName;
+    }
+
+    public void setId(int id) {
+        words.forEach(w -> setId(id));
     }
 }

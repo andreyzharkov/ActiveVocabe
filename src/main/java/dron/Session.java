@@ -83,4 +83,11 @@ public class Session {
     public void setId(int id) {
         words.forEach(w -> setId(id));
     }
+
+    public void updateWordKnowledge(int wordIndex, boolean correct){
+        Word w = words.get(wordIndex);
+        words.remove(wordIndex);
+        w.updateKnowledge(correct);
+        words.add(wordIndex, w);
+    }
 }

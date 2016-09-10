@@ -39,7 +39,11 @@ public class Word {
 
     public final void updateKnowledge(boolean answer){
         if (answer) knowledge++;
-        else knowledge--;
+        else knowledge = 0;
+    }
+
+    public final int getKnowledge(){
+        return knowledge;
     }
 
     @Override

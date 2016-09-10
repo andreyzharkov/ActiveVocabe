@@ -32,6 +32,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.min;
+
 public class App extends Application {
     public static final String testDirectory = "C:\\projects\\debug";
 
@@ -190,7 +192,12 @@ public class App extends Application {
         Button testBtn = new Button("Test");
         testBtn.setOnAction((e) -> {
             Optional<Pair<String, String>> result = getQuizSelectionDialog().showAndWait();
-            getQuizStage(1, result.get().getKey()).showAndWait();
+            if(!result.get().getKey().equals("Session")){
+                getQuizStage(5, result.get().getKey()).showAndWait();
+            }
+            else{
+                getQuizStage(5, result.get().getValue()).showAndWait();
+            }
         });
         mainBox.getChildren().add(testBtn);
 
@@ -271,19 +278,19 @@ public class App extends Application {
 
         dialog.getDialogPane().setContent(grid);
         dialog.setResultConverter(dialogButton -> {
-            Stage quizStage;
-            int sizeOfQuiz = 10;
+//            Stage quizStage;
+//            int sizeOfQuiz = 10;
             if (dialogButton == btnOk) {
-                switch (group.getSelectedToggle().getUserData().toString()) {
-                    case "Random":
-                        quizStage = getQuizStage(sizeOfQuiz, "Random");
-                        break;
-                    case "Worst":
-                        quizStage = getQuizStage(sizeOfQuiz, "Worst");
-                        break;
-                    default:
-                        quizStage = getQuizStage(sizeOfQuiz, sessionChoiceBox.getValue());
-                }
+//                switch (group.getSelectedToggle().getUserData().toString()) {
+//                    case "Random":
+//                        quizStage = getQuizStage(sizeOfQuiz, "Random");
+//                        break;
+//                    case "Worst":
+//                        quizStage = getQuizStage(sizeOfQuiz, "Worst");
+//                        break;
+//                    default:
+//                        quizStage = getQuizStage(sizeOfQuiz, sessionChoiceBox.getValue());
+//                }
                 return new Pair<>(group.getSelectedToggle()
                         .getUserData().toString(), sessionChoiceBox.getValue());
             }
@@ -293,14 +300,28 @@ public class App extends Application {
         return dialog;
     }
 
-    private Stage getQuizStage(int size, String quizType) {
+    private Stage getQuizStage(int size_, String quizType) {
         Random random = new Random();
-        List<Word> allWords = sessions.stream().map(Session::getWords).flatMap(l -> l.stream())
-                .collect(Collectors.toList());
+        List<Word> allWords;
+        if (quizType.equals("Random") || quizType.equals("Worst")) {
+            allWords = sessions.stream().map(Session::getWords).flatMap(l -> l.stream())
+                    .collect(Collectors.toList());
+        } else {
+            allWords = sessions.stream().filter(s -> s.getName().equals(quizType))
+                    .collect(Collectors.toList()).get(0).getWords().stream().collect(Collectors.toList());
+
+// ЧЕРТОВЩИНА КАКАЯ-ТО. КОД НИЖЕ НЕ РАБОТАЕТ
+//            allWords = sessions.stream().filter(s -> s.getName().equals(quizType))
+//                    .collect(Collectors.toList()).get(0).getWords();
+        }
 
         if (quizType.equals("Random")) {
-            allWords.sort((a, b) -> random.nextInt(2));
+            allWords.sort((a, b) -> random.nextInt(20) - 10);
         }
+        if (quizType.equals("Worst")) {
+            allWords.sort((a, b) -> a.getKnowledge() - b.getKnowledge());
+        }
+        int size = min(size_, allWords.size());
         List<Word> testWords = allWords.subList(0, size);
 
         List<Pair<Integer, Integer>> wordsIds = new ArrayList<>(size);
@@ -319,13 +340,22 @@ public class App extends Application {
         answer.setPromptText("your answer");
         answer.setOnAction((event) -> {
             boolean correct = answer.getText().equals(testWords.get(currentIndex).getOriginal());
-            sessions.get(wordsIds.get(currentIndex).getKey()).getWords()
-                    .get(wordsIds.get(currentIndex).getValue()).updateKnowledge(correct);
+
+            Session session = sessions.get(wordsIds.get(currentIndex).getKey());
+            session.updateWordKnowledge(wordsIds.get(currentIndex).getValue(), correct);
+            sessions.remove((int) wordsIds.get(currentIndex).getKey());
+            sessions.add(wordsIds.get(currentIndex).getKey(), session);
+            session.save();
+
             if (!correct) {
                 resentErrors.addWord(testWords.get(currentIndex));
             }
             currentIndex++;
             if (currentIndex == size) quizStage.close();
+            else {
+                question.setText(testWords.get(currentIndex).getForeign());
+                answer.setText("");
+            }
         });
         vBox.getChildren().addAll(question, answer);
         Scene scene = new Scene(vBox);

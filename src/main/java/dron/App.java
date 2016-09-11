@@ -23,9 +23,9 @@ import javafx.stage.WindowEvent;
 import javafx.util.Pair;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +51,27 @@ public class App extends Application {
                     .filter(Files::isRegularFile)
                     .map(Path::toFile)
                     .collect(Collectors.toList());
+            Files.walkFileTree(testDirectory, new FileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    return null;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    return null;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    return null;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    return null;
+                }
+            });
             for (File file : files) {
                 sessions.add(new Session(file, sessions.size()));
             }

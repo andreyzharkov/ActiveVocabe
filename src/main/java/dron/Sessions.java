@@ -2,10 +2,7 @@ package dron;
 
 import javafx.util.Pair;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -60,6 +57,10 @@ public class Sessions {
         return vocabe.containsKey(session);
     }
 
+    public Set<Word> get(String key){
+        return vocabe.get(key);
+    }
+
     public void rename(String oldName, String newName){
         Set<Word> words = vocabe.get(oldName);
         vocabe.remove(oldName);
@@ -76,6 +77,11 @@ public class Sessions {
         }
     }
 
+    public void add(String session){
+        if (!contains(session)){
+            vocabe.put(session, new LinkedHashSet<>());
+        }
+    }
 
     private Pair<String, Set<Word>> readSessionFromFile(File file) {
         String name = "";
@@ -88,10 +94,11 @@ public class Sessions {
                     System.exit(1);
                 }
                 String foreign;
-                List<String> translations = new ArrayList<>();
                 int knowledge;
                 String s;
                 while (true) {
+                    List<String> translations = new ArrayList<>();
+
                     if ((foreign = in.readLine()) == null) break;
                     if ((s = in.readLine()) == null || !s.equals("[")) break;
                     while ((s = in.readLine()) != null && !s.equals("]")) {

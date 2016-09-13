@@ -1,6 +1,8 @@
 package dron;
 
+import com.sun.deploy.util.StringUtils;
 import javafx.application.Application;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -8,9 +10,11 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.InputMethodEvent;
@@ -21,19 +25,17 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.util.Callback;
 import javafx.util.Pair;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.min;
@@ -46,6 +48,8 @@ public class App extends Application {
     private Sessions sessions;
     private Stage mainStage;
     private ComboBox<String> sessionsBox;
+    private TreeView<String> treeView;
+    private HBox root;
 
     public App() {
         sessions = new Sessions(testDirectory);
@@ -61,7 +65,14 @@ public class App extends Application {
             }
         });
 
-        Scene scene = new Scene(buildFileSystemBrowser(), 500, 600);
+        HBox hBox = new HBox();
+        hBox.getChildren().add(buildFileSystemBrowser());
+        Separator sep = new Separator();
+        sep.setOrientation(Orientation.VERTICAL);
+        hBox.getChildren().addAll(sep, getSessionViewPane("s1"));
+        root = hBox;
+
+        Scene scene = new Scene(root, 500, 600);
 
         mainStage.setTitle("Active Vocabe");
         mainStage.setScene(scene);
@@ -72,9 +83,42 @@ public class App extends Application {
         launch(args);
     }
 
+    private VBox getSessionViewPane(String session) {
+        TableView<Word> table = new TableView<>();
+
+        final Label label = new Label("Words in session " + session + ":");
+        label.setFont(new Font("Arial", 20));
+
+        table.setEditable(true);
+
+        TableColumn<Word, String> foreignCol = new TableColumn<>("Foreign");
+        TableColumn<Word, String> translationsCol = new TableColumn<>("Translations");
+
+        table.getColumns().addAll(foreignCol, translationsCol);
+
+        foreignCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Word, String>, ObservableValue<String>>() {
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<Word, String> p) {
+                // p.getValue() returns the Person instance for a particular TableView row
+                return new SimpleStringProperty(p.getValue().getForeign());
+            }
+        });
+
+        translationsCol.setCellValueFactory((p) -> {
+            return new SimpleStringProperty(StringUtils.join(p.getValue().getTranslations(), ", "));
+        });
+
+        ObservableList<Word> items = FXCollections.observableList(sessions.get(session)
+                .stream().collect(Collectors.toList()));
+        table.setItems(items);
+
+        VBox vBox = new VBox(10);
+        vBox.getChildren().addAll(label, table);
+        return vBox;
+    }
+
     private TreeView buildFileSystemBrowser() {
         FilePathTreeItem root = new FilePathTreeItem(new File(testDirectory));
-        TreeView<String> treeView = new TreeView<>(root);
+        treeView = new TreeView<>(root);
         treeView.setEditable(true);
         treeView.setCellFactory((TreeView<String> p) ->
                 new TextFieldTreeCellImpl());
@@ -85,6 +129,8 @@ public class App extends Application {
 
         private boolean isDirectory;
         private String fullPath;
+        //for files only
+        private String sessionName;
 
         public boolean isDirectory() {
             return (this.isDirectory);
@@ -102,12 +148,59 @@ public class App extends Application {
                 super.getChildren().setAll(buildChildren(fullPath));
             } else {
                 this.isDirectory = false;
+
+                //выясняем имя сессии
+                try {
+                    try (BufferedReader in = new BufferedReader(new InputStreamReader(
+                            new FileInputStream(file.getAbsoluteFile()), "UTF8"))) {
+                        if ((sessionName = in.readLine()) == null) {
+                            throw new Exception("Can't read session name!");
+                        }
+                        setValue(sessionName);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.exit(4);
+                }
+            }
+        }
+
+        public FilePathTreeItem(File file, String sessionName) {
+            super(file.getName());
+            this.fullPath = file.toString();
+            if (file.isDirectory()) {
+                this.isDirectory = true;
+                super.getChildren().setAll(buildChildren(fullPath));
+            } else {
+                this.isDirectory = false;
+
+                //выясняем имя сессии
+                this.sessionName = sessionName;
+                setValue(sessionName);
             }
         }
 
         @Override
         public boolean isLeaf() {
             return !isDirectory;
+        }
+
+        //по имени сессии ищем имя файла (вглубину), где она записана
+        public String findFileName(String sessionNameQuery) {
+            if (isDirectory()) {
+                for (TreeItem<String> child : getChildren()) {
+                    String res = ((FilePathTreeItem) child).findFileName(sessionNameQuery);
+                    if (res != null) {
+                        return res;
+                    }
+                }
+                return null;
+            } else {
+                if (sessionNameQuery.equals(sessionName)) {
+                    return fullPath;
+                }
+                return null;
+            }
         }
 
         private static ObservableList<FilePathTreeItem> buildChildren(String path) {
@@ -138,17 +231,24 @@ public class App extends Application {
         public TextFieldTreeCellImpl() {
             MenuItem addMenuItem = new MenuItem("Add Session");
             addMenuItem.setOnAction((ActionEvent t) -> {
-                File file = new File(((FilePathTreeItem) getTreeItem()).getFullPath(), "new session");
-                try {
-                    if (!file.createNewFile()) {
-                        System.err.println("cannot create file!");
-                        System.exit(3);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.exit(3);
+                String newSession = "s" + Integer.toString((new Random()).nextInt());
+                File file = new File(((FilePathTreeItem) getTreeItem()).getFullPath(), newSession);
+                while (file.exists()){
+                    newSession = "s" + Integer.toString((new Random()).nextInt());
+                    file = new File(((FilePathTreeItem) getTreeItem()).getFullPath(), newSession);
                 }
-                getTreeItem().getChildren().add(new FilePathTreeItem(file));
+                sessions.add("new session");
+
+//                try {
+//                    if (!file.createNewFile()) {
+//                        System.err.println("cannot create file!");
+//                        System.exit(3);
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    System.exit(3);
+//                }
+                getTreeItem().getChildren().add(new FilePathTreeItem(file, "new session"));
             });
 
             MenuItem addDirItem = new MenuItem("Add Folder");
@@ -168,6 +268,16 @@ public class App extends Application {
             MenuItem addWordsItem = new MenuItem("Add word");
             MenuItem viewWordsItem = new MenuItem("View words");
             MenuItem startQuiz = new MenuItem("quiz");
+
+            viewWordsItem.setOnAction((e) -> {
+                root.getChildren().remove(2);
+                root.getChildren().add(getSessionViewPane(((FilePathTreeItem) getTreeItem()).sessionName));
+            });
+            addWordsItem.setOnAction((e) -> {
+                showAddWordPane(((FilePathTreeItem) getTreeItem()).sessionName);
+            });
+
+            sessionMenu.getItems().addAll(addWordsItem, viewWordsItem, startQuiz);
         }
 
         @Override
@@ -184,27 +294,36 @@ public class App extends Application {
 
         @Override
         public void commitEdit(String newValue) {
-            //textField.setText("");
-            //if !is.bad()
-            if (sessions.contains("s2")) {
-                System.exit(1);
-            }
-            if (!newValue.equals("") && !sessions.contains(newValue)) {
-                //dirty hack
-                FilePathTreeItem item = (FilePathTreeItem) getTreeItem();
+            textField.setText("");
+            //dirty hack
+            FilePathTreeItem item = (FilePathTreeItem) getTreeItem();
+
+            if (!newValue.equals("") &&
+                    (!sessions.contains(newValue) || item.isDirectory())) {
 
                 File file = new File(item.getFullPath());
-                if (!file.renameTo(new File(file.getParent() + File.separator + newValue))) {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error!");
-                    alert.setHeaderText("Because of some system restrictions file wasn't renamed!");
-                    alert.setContentText("Try to rerun program.");
-                    alert.showAndWait();
+                if (item.isDirectory()) {
+                    if (!file.renameTo(new File(file.getParent() + File.separator + newValue))) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error!");
+                        alert.setHeaderText("Because of some system restrictions file wasn't renamed!");
+                        alert.setContentText("Try to rerun program.");
+                        alert.showAndWait();
 
-                    super.commitEdit(getItem());
+                        super.commitEdit(getItem());
+                    } else {
+                        super.commitEdit(newValue);
+                    }
                 } else {
+                    sessions.rename(getItem(), newValue);
+                    item.sessionName = newValue;
+                    if (sessions.get(newValue).size() > 0) {
+                        saveSession(newValue);
+                    }
+
                     super.commitEdit(newValue);
                 }
+
             } else {
                 super.commitEdit(getItem());
                 if (newValue.equals("")) {
@@ -250,7 +369,7 @@ public class App extends Application {
                     setGraphic(getTreeItem().getGraphic());
                     if (!getTreeItem().isLeaf()) {
                         setContextMenu(folderMenu);
-                    } else{
+                    } else {
                         setContextMenu(sessionMenu);
                     }
                 }
@@ -273,6 +392,65 @@ public class App extends Application {
             return getItem() == null ? "" : getItem();
         }
     }
+
+    private String getSessionFileName(String session) {
+        //если имя херовое - возвращает null
+        return ((FilePathTreeItem) treeView.getRoot()).findFileName(session);
+    }
+
+    private void saveSession(String session) {
+        File file = new File(getSessionFileName(session));
+        try {
+            if (!file.exists() && sessions.get(session).size() > 0 ) {
+                file.createNewFile();
+            }
+
+            try (PrintWriter out = new PrintWriter(file.getAbsolutePath(), "UTF-8")) {
+                out.println(session);
+                for (Word w : sessions.get(session)) {
+                    out.println(w);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(5);
+        }
+    }
+
+    private void showAddWordPane(String session) {
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setOpaqueInsets(new Insets(10, 10, 10, 10));
+
+        TextField foreign = new TextField();
+        foreign.setPromptText("foreign");
+        TextField translation = new TextField();
+        translation.setPromptText("translations");
+        foreign.setOnAction((e) -> translation.requestFocus());
+        translation.setOnAction((e) -> {
+            List<String> tr = new ArrayList<>();
+            tr.add(translation.getText());
+            sessions.get(session).add(new Word(foreign.getText(), tr));
+            saveSession(session);
+            foreign.clear();
+            translation.clear();
+            foreign.requestFocus();
+        });
+
+        grid.addRow(0, foreign, translation);
+        Dialog<Boolean> dialog = new Dialog<>();
+        DialogPane dialogPane = new DialogPane();
+        dialogPane.setContent(grid);
+        dialog.setDialogPane(dialogPane);
+        dialog.setTitle("Add new word to session " + session);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.showAndWait();
+    }
+
+    private void showSelectQuizTypeDialog(){}
+
+    private void showQuizDialog(){}
 
 //    private Dialog<Boolean> getAddWordPane() {
 //        Dialog<Boolean> dialog = new Dialog<>();

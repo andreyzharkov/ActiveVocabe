@@ -115,8 +115,12 @@ public class Word {
         return false;
     }
 
-    public boolean equals(Word w) {
-        return foreign.equals(w.foreign);
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof Word){
+            return foreign.equals(((Word)obj).foreign);
+        }
+        return super.equals(obj);
     }
 
     @Override

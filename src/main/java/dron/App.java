@@ -1,6 +1,7 @@
 package dron;
 
 import com.sun.deploy.util.StringUtils;
+import com.google.common.base.CaseFormat;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
@@ -11,6 +12,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -35,6 +37,7 @@ import javafx.util.Pair;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,21 +46,19 @@ import static java.lang.Math.min;
 public class App extends Application {
     public static final String testDirectory = "C:\\projects\\debug";
 
-    private Session currentSession;
-    private Session resentErrors;
     private Sessions sessions;
-    private Stage mainStage;
-    private ComboBox<String> sessionsBox;
+    private Set<Word> resentErrors;
     private TreeView<String> treeView;
     private HBox root;
 
     public App() {
         sessions = new Sessions(testDirectory);
+        resentErrors = Collections.synchronizedSet(new LinkedHashSet<>());
     }
 
     @Override
     public void start(Stage primaryStage) {
-        mainStage = primaryStage;
+        Stage mainStage = primaryStage;
         mainStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
@@ -89,8 +90,6 @@ public class App extends Application {
         final Label label = new Label("Words in session " + session + ":");
         label.setFont(new Font("Arial", 20));
 
-        table.setEditable(true);
-
         TableColumn<Word, String> foreignCol = new TableColumn<>("Foreign");
         TableColumn<Word, String> translationsCol = new TableColumn<>("Translations");
 
@@ -108,6 +107,44 @@ public class App extends Application {
         });
 
         ObservableList<Word> items = FXCollections.observableList(sessions.get(session)
+                .stream().collect(Collectors.toList()));
+        table.setItems(items);
+
+        VBox vBox = new VBox(10);
+        vBox.getChildren().addAll(label, table);
+        return vBox;
+    }
+
+    private VBox getErrorsViewPane() {
+        if (resentErrors.size() == 0) {
+            Text congratulation = new Text("Congratulations! You made no mistakes in this test!");
+            VBox vBox = new VBox();
+            vBox.getChildren().add(congratulation);
+            return vBox;
+        }
+
+        TableView<Word> table = new TableView<>();
+
+        final Label label = new Label("Your errors:");
+        label.setFont(new Font("Arial", 20));
+
+        TableColumn<Word, String> foreignCol = new TableColumn<>("Foreign");
+        TableColumn<Word, String> translationsCol = new TableColumn<>("Translations");
+
+        table.getColumns().addAll(foreignCol, translationsCol);
+
+        foreignCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Word, String>, ObservableValue<String>>() {
+            public ObservableValue<String> call(TableColumn.CellDataFeatures<Word, String> p) {
+                // p.getValue() returns the Person instance for a particular TableView row
+                return new SimpleStringProperty(p.getValue().getForeign());
+            }
+        });
+
+        translationsCol.setCellValueFactory((p) -> {
+            return new SimpleStringProperty(StringUtils.join(p.getValue().getTranslations(), ", "));
+        });
+
+        ObservableList<Word> items = FXCollections.observableList(resentErrors
                 .stream().collect(Collectors.toList()));
         table.setItems(items);
 
@@ -233,7 +270,7 @@ public class App extends Application {
             addMenuItem.setOnAction((ActionEvent t) -> {
                 String newSession = "s" + Integer.toString((new Random()).nextInt());
                 File file = new File(((FilePathTreeItem) getTreeItem()).getFullPath(), newSession);
-                while (file.exists()){
+                while (file.exists()) {
                     newSession = "s" + Integer.toString((new Random()).nextInt());
                     file = new File(((FilePathTreeItem) getTreeItem()).getFullPath(), newSession);
                 }
@@ -275,6 +312,9 @@ public class App extends Application {
             });
             addWordsItem.setOnAction((e) -> {
                 showAddWordPane(((FilePathTreeItem) getTreeItem()).sessionName);
+            });
+            startQuiz.setOnAction((e) -> {
+                showSelectQuizTypeDialog();
             });
 
             sessionMenu.getItems().addAll(addWordsItem, viewWordsItem, startQuiz);
@@ -401,7 +441,7 @@ public class App extends Application {
     private void saveSession(String session) {
         File file = new File(getSessionFileName(session));
         try {
-            if (!file.exists() && sessions.get(session).size() > 0 ) {
+            if (!file.exists() && sessions.get(session).size() > 0) {
                 file.createNewFile();
             }
 
@@ -448,292 +488,289 @@ public class App extends Application {
         dialog.showAndWait();
     }
 
-    private void showSelectQuizTypeDialog(){}
+    private void showSelectQuizTypeDialog() {
+        Dialog<QuizProperties> dialog = new Dialog<>();
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-    private void showQuizDialog(){}
+        GridPane gridPane = new GridPane();
+        gridPane.setVgap(10);
+        gridPane.setHgap(10);
+        gridPane.setOpaqueInsets(new Insets(10, 10, 10, 10));
 
-//    private Dialog<Boolean> getAddWordPane() {
-//        Dialog<Boolean> dialog = new Dialog<>();
-//        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.FINISH, ButtonType.CANCEL);
-//
-//        GridPane addWordForm = new GridPane();
-//        addWordForm.setGridLinesVisible(true);
-//
-//        TextField foreign = new TextField();
-//        TextField original = new TextField();
-//
-//        foreign.setPromptText("foreign");
-//        original.setPromptText("translation");
-//
-//        foreign.setOnMouseClicked((ev) -> foreign.setText(""));
-//        foreign.setOnAction((ev) -> {
-//            original.setText("");
-//            original.requestFocus();
-//        });
-//        original.setOnMouseClicked((ev) -> original.setText(""));
-//        original.setOnAction((ev) -> {
-//            currentSession.addWord(new Word(foreign.getText(), original.getText()));
-//
-//            foreign.setText("");
-//            original.setText("");
-//
-//            currentSession.save();
-//
-//            foreign.requestFocus();
-//        });
-//
-//
-//        addWordForm.add(foreign, 0, 0);
-//        addWordForm.add(original, 1, 0);
-//
-//// Почему-то это не прокатывает. При нажатии на кнопки обработчики не вызываются
-////        Node applyBtn = dialog.getDialogPane().lookupButton(ButtonType.APPLY);
-////        Node finishBtn = dialog.getDialogPane().lookupButton(ButtonType.FINISH);
-////
-////        applyBtn.setOnMouseClicked(event -> {
-////            System.out.println("apply");
-////            currentSession.addWord(new Word(foreign.getText(), original.getText()));
-////            foreign.setText("");
-////            original.setText("");
-////            currentSession.save();
-////        });
-////        finishBtn.setOnMouseClicked(event -> {
-////            dialog.close();
-////            System.out.println("finish");
-////        });
-//
-//        dialog.getDialogPane().setContent(addWordForm);
-//        dialog.setTitle("Add word");
-//        dialog.setOnCloseRequest((e) -> {
-//            if (!currentSession.getWords().isEmpty()) {
-//                sessions.add(currentSession);
-//                sessionsBox.getItems().add(currentSession.getName());
-//                sessions.get(sessions.size() - 1).setId(sessions.size() - 1);
-//                currentSession = null;
-//                dialog.close();
-//            }
-//        });
-//        return dialog;
-//    }
-//
-//    private VBox getInitialPane() {
-//        VBox mainBox = new VBox(20);
-//        HBox hBox = new HBox(10);
-//        sessionsBox = new ComboBox<>();
-//        sessionsBox.setId("sessionComboBox");
-//        ObservableList<String> names = FXCollections.observableArrayList();
-//        names.add("new session");
-//
-//        for (Session s : sessions) {
-//            names.add(s.getName());
-//        }
-//
-//        sessionsBox.setItems(names);
-//        hBox.getChildren().add(sessionsBox);
-//        mainBox.getChildren().add(hBox);
-//
-//        sessionsBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
-//            @Override
-//            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-//                TextField sessionName = new TextField();
-//                sessionName.setPromptText("session name");
-//
-//                if (sessionsBox.getValue().equals("new session")) {
-//                    hBox.getChildren().add(sessionName);
-//                } else {
-//                    if (hBox.getChildren().size() > 1)
-//                        hBox.getChildren().remove(1);
-//                    if (mainBox.getChildren().size() > 1)
-//                        mainBox.getChildren().remove(1);
-//
-//                    Session displayed = sessions.stream()
-//                            .filter(s -> s.getName().equals(sessionsBox.getValue()))
-//                            .collect(Collectors.toList()).get(0);
-//
-//                    ScrollPane scrollPane = new ScrollPane(getSessionWordsPane(displayed));
-//                    mainBox.getChildren().add(scrollPane);
-//                }
-//
-//                sessionName.setOnAction((event) -> {
-//                    currentSession = new Session(sessionName.getText());
-//                    getAddWordPane().showAndWait();
-//                });
-//            }
-//        });
-//
-//        Button testBtn = new Button("Test");
-//        testBtn.setOnAction((e) -> {
-//            Optional<Pair<String, String>> result = getQuizSelectionDialog().showAndWait();
-//            if(!result.get().getKey().equals("Session")){
-//                getQuizStage(5, result.get().getKey()).showAndWait();
-//            }
-//            else{
-//                getQuizStage(5, result.get().getValue()).showAndWait();
-//            }
-//        });
-//        mainBox.getChildren().add(testBtn);
-//
-//        return mainBox;
-//    }
-//
-//    private GridPane getSessionWordsPane(Session session) {
-//        GridPane gridPane = new GridPane();
-//        int rowIndex = 0;
-//        for (Word word : session.getWords()) {
-//            Text foreign = new Text(word.getForeign());
-//            Text original = new Text(word.getOriginal());
-//            gridPane.addRow(rowIndex, foreign, original);
-//            rowIndex++;
-//        }
-//        gridPane.setHgap(20);
-//        gridPane.setVgap(10);
-//        gridPane.setPadding(new Insets(10, 10, 10, 10));
-//
-//        return gridPane;
-//    }
-//
-//    private Dialog<Pair<String, String>> getQuizSelectionDialog() {
-//        Dialog<Pair<String, String>> dialog = new Dialog<>();
-//        dialog.setTitle("Choose test format");
-//
-//        ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-//        dialog.getDialogPane().getButtonTypes().addAll(btnOk, ButtonType.CANCEL);
-//
-//        Node okButton = dialog.getDialogPane().lookupButton(btnOk);
-//        okButton.setDisable(true);
-//
-//        final ToggleGroup group = new ToggleGroup();
-//
-//        RadioButton rbRandom = new RadioButton("Random");
-//        rbRandom.setToggleGroup(group);
-//        rbRandom.setUserData("Random");
-//
-//        RadioButton rbWorst = new RadioButton("Worst");
-//        rbWorst.setToggleGroup(group);
-//        rbWorst.setUserData("Worst");
-//
-//        RadioButton rbSession = new RadioButton("Session");
-//        rbSession.setToggleGroup(group);
-//        rbSession.setUserData("Session");
-//
-//        ComboBox<String> sessionChoiceBox = new ComboBox<>();
-//        sessionChoiceBox.setOnAction((ev) -> {
-//            if (sessionChoiceBox.getValue() == null) {
-//                okButton.setDisable(true);
-//            } else {
-//                okButton.setDisable(false);
-//            }
-//        });
-//
-//        ObservableList<String> names = FXCollections.observableArrayList();
-//        names.addAll(sessions.stream().map(Session::getName).collect(Collectors.toList()));
-//
-//        group.selectedToggleProperty().addListener(
-//                (ObservableValue<? extends Toggle> ov, Toggle old_toggle,
-//                 Toggle new_toggle) -> {
-//                    if (group.getSelectedToggle().getUserData().toString().equals("Session")) {
-//                        sessionChoiceBox.setItems(names);
-//                        sessionChoiceBox.setVisible(true);
-//                        okButton.setDisable(true);
-//                    } else {
-//                        sessionChoiceBox.setVisible(false);
-//                        sessionChoiceBox.setValue(null);
-//                        okButton.setDisable(false);
-//                    }
-//                });
-//
-//        GridPane grid = new GridPane();
-//        grid.add(rbRandom, 0, 0);
-//        grid.add(rbWorst, 0, 1);
-//        grid.add(rbSession, 0, 2);
-//        grid.add(sessionChoiceBox, 1, 2);
-//
-//        dialog.getDialogPane().setContent(grid);
-//        dialog.setResultConverter(dialogButton -> {
-////            Stage quizStage;
-////            int sizeOfQuiz = 10;
-//            if (dialogButton == btnOk) {
-////                switch (group.getSelectedToggle().getUserData().toString()) {
-////                    case "Random":
-////                        quizStage = getQuizStage(sizeOfQuiz, "Random");
-////                        break;
-////                    case "Worst":
-////                        quizStage = getQuizStage(sizeOfQuiz, "Worst");
-////                        break;
-////                    default:
-////                        quizStage = getQuizStage(sizeOfQuiz, sessionChoiceBox.getValue());
-////                }
-//                return new Pair<>(group.getSelectedToggle()
-//                        .getUserData().toString(), sessionChoiceBox.getValue());
-//            }
-//            return null;
-//        });
-//
-//        return dialog;
-//    }
-//
-//    private Stage getQuizStage(int size_, String quizType) {
-//        Random random = new Random();
-//        List<Word> allWords;
-//        if (quizType.equals("Random") || quizType.equals("Worst")) {
-//            allWords = sessions.stream().map(Session::getWords).flatMap(l -> l.stream())
-//                    .collect(Collectors.toList());
-//        } else {
-//            allWords = sessions.stream().filter(s -> s.getName().equals(quizType))
-//                    .collect(Collectors.toList()).get(0).getWords().stream().collect(Collectors.toList());
-//
-//// ЧЕРТОВЩИНА КАКАЯ-ТО. КОД НИЖЕ НЕ РАБОТАЕТ
-////            allWords = sessions.stream().filter(s -> s.getName().equals(quizType))
-////                    .collect(Collectors.toList()).get(0).getWords();
-//        }
-//
-//        if (quizType.equals("Random")) {
-//            allWords.sort((a, b) -> random.nextInt(20) - 10);
-//        }
-//        if (quizType.equals("Worst")) {
-//            allWords.sort((a, b) -> a.getKnowledge() - b.getKnowledge());
-//        }
-//        int size = min(size_, allWords.size());
-//        List<Word> testWords = allWords.subList(0, size);
-//
-//        List<Pair<Integer, Integer>> wordsIds = new ArrayList<>(size);
-//        testWords.forEach(word -> {
-//            int sessionId = word.getSessionId();
-//            int wordId = sessions.get(sessionId).getWords().indexOf(word);
-//            wordsIds.add(new Pair<>(sessionId, wordId));
-//        });
-//
-//        Stage quizStage = new Stage();
-//        currentIndex = 0;
-//        VBox vBox = new VBox();
-//        Text question = new Text();
-//        question.setText(testWords.get(0).getForeign());
-//        TextField answer = new TextField();
-//        answer.setPromptText("your answer");
-//        answer.setOnAction((event) -> {
-//            boolean correct = answer.getText().equals(testWords.get(currentIndex).getOriginal());
-//
-//            Session session = sessions.get(wordsIds.get(currentIndex).getKey());
-//            session.updateWordKnowledge(wordsIds.get(currentIndex).getValue(), correct);
-//            sessions.remove((int) wordsIds.get(currentIndex).getKey());
-//            sessions.add(wordsIds.get(currentIndex).getKey(), session);
-//            session.save();
-//
-//            if (!correct) {
-//                resentErrors.addWord(testWords.get(currentIndex));
-//            }
-//            currentIndex++;
-//            if (currentIndex == size) quizStage.close();
-//            else {
-//                question.setText(testWords.get(currentIndex).getForeign());
-//                answer.setText("");
-//            }
-//        });
-//        vBox.getChildren().addAll(question, answer);
-//        Scene scene = new Scene(vBox);
-//        quizStage.setScene(scene);
-//        return quizStage;
-//    }
-//
-//    private int currentIndex;
+        ToggleGroup radioGroup = new ToggleGroup();
+        radioGroup.setUserData(null);
+        RadioButton randomBtn = new RadioButton(
+                CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL,
+                        QuizType.RANDOM.toString().toLowerCase()));
+        RadioButton ratingBtn = new RadioButton(
+                CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL,
+                        QuizType.RATING.toString().toLowerCase()));
+        RadioButton sessionBtn = new RadioButton(
+                CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL,
+                        QuizType.SESSION.toString().toLowerCase()));
+        RadioButton errorsBtn = new RadioButton(
+                CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL,
+                        QuizType.ERRORS.toString().toLowerCase()));
+        ComboBox<String> sessionChoiceBox = new ComboBox<>(FXCollections
+                .observableList(sessions.getKeys()
+                        .stream().collect(Collectors.toList())));
+        sessionChoiceBox.setOnAction((e) -> {
+            if (sessionChoiceBox.getValue() != null) {
+                radioGroup.setUserData(sessionBtn.getText());
+                dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(false);
+            }
+        });
+        sessionChoiceBox.setValue(null);
+        sessionChoiceBox.setDisable(true);
+
+        randomBtn.setToggleGroup(radioGroup);
+        ratingBtn.setToggleGroup(radioGroup);
+        sessionBtn.setToggleGroup(radioGroup);
+        errorsBtn.setToggleGroup(radioGroup);
+
+        dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
+        randomBtn.setOnAction((e) -> {
+            radioGroup.setUserData(randomBtn.getText());
+            sessionChoiceBox.setValue(null);
+            sessionChoiceBox.setDisable(true);
+            dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(false);
+        });
+        ratingBtn.setOnAction((e) -> {
+            radioGroup.setUserData(ratingBtn.getText());
+            sessionChoiceBox.setValue(null);
+            sessionChoiceBox.setDisable(true);
+            dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(false);
+        });
+        sessionBtn.setOnAction((e) -> {
+            radioGroup.setUserData("");
+            sessionChoiceBox.setDisable(false);
+            dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
+        });
+        errorsBtn.setOnAction((e) -> {
+            radioGroup.setUserData(ratingBtn.getText());
+            sessionChoiceBox.setValue(null);
+            sessionChoiceBox.setDisable(true);
+            dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(false);
+        });
+
+        Label testSizeLabel = new Label("Size of test: ");
+        TextField testSizeInput = new TextField("0");
+        testSizeInput.setOnAction((e) -> {
+            if (dialog.getDialogPane().lookupButton(ButtonType.OK).isDisable()
+                    && sessionChoiceBox.getValue() != null) {
+                dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(false);
+            }
+            try {
+                Integer.parseInt(testSizeInput.getText());
+            } catch (NumberFormatException ex) {
+                dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
+            }
+        });
+
+        VBox radios = new VBox(randomBtn, ratingBtn, sessionBtn);
+        if (!resentErrors.isEmpty()) {
+            radios.getChildren().add(errorsBtn);
+        }
+
+        RadioButton foreignBtn = new RadioButton("Foreign input");
+        RadioButton translationBtn = new RadioButton("Translation input");
+        ToggleGroup languageGroup = new ToggleGroup();
+        foreignBtn.setToggleGroup(languageGroup);
+        translationBtn.setToggleGroup(languageGroup);
+        foreignBtn.setSelected(true);
+        foreignBtn.setUserData(true);
+        translationBtn.setUserData(false);
+
+        gridPane.add(radios, 0, 0, 1, 4);
+        gridPane.add(sessionChoiceBox, 1, 4);
+        gridPane.add(testSizeLabel, 0, 5);
+        gridPane.add(testSizeInput, 1, 5, 2, 1);
+        gridPane.add(foreignBtn, 0, 6, 2, 1);
+        gridPane.add(translationBtn, 0, 7, 2, 1);
+
+        dialog.getDialogPane().setContent(gridPane);
+        dialog.setResultConverter((btn) -> {
+            if (btn.equals(ButtonType.CANCEL)) return null;
+            String resultType = radioGroup.getUserData().toString();
+            int testSize = Integer.parseInt(testSizeInput.getText());
+
+            if (resultType.equals(randomBtn.getText())) {
+                return new QuizProperties(QuizType.RANDOM, testSize,
+                        (boolean) languageGroup.getSelectedToggle().getUserData());
+            }
+            if (resultType.equals(ratingBtn.getText())) {
+                return new QuizProperties(QuizType.RATING, testSize,
+                        (boolean) languageGroup.getSelectedToggle().getUserData());
+            }
+            if (resultType.equals(errorsBtn.getText())) {
+                return new QuizProperties(QuizType.ERRORS, testSize,
+                        (boolean) languageGroup.getSelectedToggle().getUserData());
+            }
+
+            return new QuizProperties(QuizType.SESSION, testSize,
+                    (boolean) languageGroup.getSelectedToggle().getUserData(),
+                    sessionChoiceBox.getValue());
+        });
+
+        Optional<QuizProperties> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            showQuizDialog(result.get());
+        }
+    }
+
+    private void showQuizDialog(QuizProperties properties) {
+        Dialog<Integer> dialog = new Dialog<>();
+
+        VBox vBox = new VBox(10);
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setOpaqueInsets(new Insets(5, 5, 5, 5));
+
+        Text question = new Text();
+        TextField answer = new TextField();
+        answer.setPromptText("Your answer");
+
+        List<Word> questionList = new ArrayList<>();
+
+        if (properties.getQuizType().equals(QuizType.RANDOM)) {
+            Random random = new Random();
+            questionList = sessions.getValues().stream().flatMap(Set::stream)
+                    .sorted((o1, o2) -> random.nextInt(11) - 5)
+                    .limit(properties.getNumberOfQuestions())
+                    .collect(Collectors.toList());
+        }
+        if (properties.getQuizType().equals(QuizType.RATING)) {
+            questionList = sessions.getValues().stream().flatMap(Set::stream)
+                    .sorted(Word.getKnowledgeComparator())
+                    .limit(properties.getNumberOfQuestions())
+                    .collect(Collectors.toList());
+        }
+        if (properties.getQuizType().equals(QuizType.SESSION)) {
+            questionList = sessions.get(properties.getSessionName())
+                    .stream()
+                    .sorted(Word.getKnowledgeComparator())
+                    .limit(properties.getNumberOfQuestions())
+                    .collect(Collectors.toList());
+        }
+        if (properties.getQuizType().equals(QuizType.ERRORS)) {
+            questionList = resentErrors.stream().collect(Collectors.toList());
+        }
+
+        final List<Word> testList = questionList;
+
+        correctAnswers = 0;
+        currentIndex = 0;
+        resentErrors = Collections.synchronizedSet(new HashSet<>());
+
+        if (properties.isQuestionsOnForeign()) {
+            question.setText(testList.get(currentIndex).getForeign());
+        } else {
+            question.setText(StringUtils.join(testList.get(currentIndex).getTranslations(), ", "));
+        }
+
+        answer.setOnAction((e) -> {
+            boolean correct;
+            if (properties.isQuestionsOnForeign()){
+                correct = testList.get(currentIndex).getTranslations().contains(answer.getText());
+            } else{
+                correct = testList.get(currentIndex).getForeign().equals(answer.getText());
+            }
+
+            if (correct) {
+                correctAnswers++;
+            } else {
+                resentErrors.add(testList.get(currentIndex));
+            }
+
+            sessions.getWord(testList.get(currentIndex)).updateKnowledge(correct);
+            saveSession(sessions.getKeyOf(testList.get(currentIndex)));
+
+            currentIndex++;
+            if (currentIndex == testList.size()) {
+                dialog.setResult(correctAnswers);
+                dialog.close();
+                showQuizResult(testList.size());
+            } else {
+                if (properties.isQuestionsOnForeign()) {
+                    question.setText(testList.get(currentIndex).getForeign());
+                } else {
+                    question.setText(StringUtils.join(testList.get(currentIndex).getTranslations(), ", "));
+                }
+                answer.setText("");
+            }
+        });
+
+        vBox.getChildren().addAll(question, answer);
+        dialog.getDialogPane().setContent(vBox);
+        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
+
+        dialog.showAndWait();
+    }
+
+    private void showQuizResult(int wordsInQuiz) {
+        Text persentage = new Text((new DecimalFormat("#.00")).format(
+                ((double) correctAnswers) / wordsInQuiz * 100) + "%");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setOpaqueInsets(new Insets(10, 10, 10, 10));
+
+        grid.add(persentage, 0, 0);
+        grid.add(getErrorsViewPane(), 0, 1, 10, 10);
+
+        Dialog dialog = new Dialog();
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK);
+        dialog.showAndWait();
+    }
+
+    private enum QuizType {
+        RANDOM,
+        RATING,
+        SESSION,
+        ERRORS
+    }
+
+    private static class QuizProperties {
+        private String sessionName;
+        private int numberOfQuestions;
+        private QuizType type;
+        private boolean isQuestionsOnForeign;
+
+        QuizProperties(QuizType type, int numberOfQuestions, boolean isQuestionsOnForeign) {
+            this.type = type;
+            this.numberOfQuestions = numberOfQuestions;
+            this.isQuestionsOnForeign = isQuestionsOnForeign;
+        }
+
+        QuizProperties(QuizType type, int numberOfQuestions, boolean isQuestionsOnForeign,
+                       String sessionName) {
+            this.type = type;
+            this.numberOfQuestions = numberOfQuestions;
+            this.isQuestionsOnForeign = isQuestionsOnForeign;
+            this.sessionName = sessionName;
+        }
+
+        public QuizType getQuizType() {
+            return type;
+        }
+
+        public int getNumberOfQuestions() {
+            return numberOfQuestions;
+        }
+
+        public String getSessionName() {
+            return sessionName;
+        }
+
+        public boolean isQuestionsOnForeign() {
+            return isQuestionsOnForeign;
+        }
+    }
+
+    //костыли
+    private int correctAnswers;
+    private int currentIndex;
+
 }

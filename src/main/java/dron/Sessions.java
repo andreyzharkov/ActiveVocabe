@@ -61,6 +61,34 @@ public class Sessions {
         return vocabe.get(key);
     }
 
+    public Collection<Set<Word>> getValues(){
+        return vocabe.values();
+    }
+
+    public Word getWord(Word w){
+        for (Set<Word> set : vocabe.values()) {
+            for (Word word : set) {
+                if(word.equals(w)){
+                    return word;
+                }
+            }
+        }
+        System.err.println("Fuck! Word wasn't in session!");
+        System.exit(99);
+        return null;
+    }
+
+    public String getKeyOf(Word w){
+        for (String key : vocabe.keySet()) {
+            if(vocabe.get(key).contains(w)){
+                return key;
+            }
+        }
+        System.err.println("Fuck! Word wasn't in session!");
+        System.exit(99);
+        return null;
+    }
+
     public void rename(String oldName, String newName){
         Set<Word> words = vocabe.get(oldName);
         vocabe.remove(oldName);
@@ -81,6 +109,10 @@ public class Sessions {
         if (!contains(session)){
             vocabe.put(session, new LinkedHashSet<>());
         }
+    }
+
+    public Set<String> getKeys(){
+        return vocabe.keySet();
     }
 
     private Pair<String, Set<Word>> readSessionFromFile(File file) {

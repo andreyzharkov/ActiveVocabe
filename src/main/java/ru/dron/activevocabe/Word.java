@@ -1,4 +1,4 @@
-package dron;
+package ru.dron.activevocabe;
 
 import org.apache.commons.lang3.StringUtils;
 

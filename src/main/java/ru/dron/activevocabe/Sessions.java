@@ -1,4 +1,4 @@
-package dron;
+package ru.dron.activevocabe;
 
 import javafx.util.Pair;
 
@@ -8,8 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static dron.App.testDirectory;
 
 /**
  * Created by Andrey on 11.09.2016.
@@ -31,7 +29,7 @@ public class Sessions {
         vocabe = Collections.synchronizedMap(new LinkedHashMap<>());
 
         try {
-            List<File> files = Files.walk(Paths.get(testDirectory))
+            List<File> files = Files.walk(Paths.get(workingDirectory))
                     .filter(Files::isRegularFile)
                     .map(Path::toFile)
                     .collect(Collectors.toList());

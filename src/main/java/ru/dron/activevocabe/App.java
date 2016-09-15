@@ -1,4 +1,4 @@
-package dron;
+package ru.dron.activevocabe;
 
 import org.apache.commons.lang3.StringUtils;
 import com.google.common.base.CaseFormat;
@@ -760,5 +760,4 @@ public class App extends Application {
     //костыли
     private int correctAnswers;
     private int currentIndex;
-
 }

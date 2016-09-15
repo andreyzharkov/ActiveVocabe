@@ -30,6 +30,7 @@ import java.nio.file.*;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 public class App extends Application {
     public static final String testDirectory = "C:\\projects\\debug";
@@ -47,12 +48,6 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) {
         Stage mainStage = primaryStage;
-        mainStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                System.exit(0);
-            }
-        });
 
         HBox hBox = new HBox();
         hBox.getChildren().add(buildFileSystemBrowser());
@@ -61,7 +56,9 @@ public class App extends Application {
         hBox.getChildren().addAll(sep, getSessionViewPane("s1"));
         root = hBox;
 
-        Scene scene = new Scene(root, 500, 600);
+        Scene scene = new Scene(root, 800, 600);
+        String cssPath = "/css/styles.css";
+        scene.getStylesheets().add(cssPath);
 
         mainStage.setTitle("Active Vocabe");
         mainStage.setScene(scene);
@@ -81,7 +78,11 @@ public class App extends Application {
         TableColumn<Word, String> foreignCol = new TableColumn<>("Foreign");
         TableColumn<Word, String> translationsCol = new TableColumn<>("Translations");
 
-        table.getColumns().addAll(foreignCol, translationsCol);
+        table.getColumns().setAll(foreignCol, translationsCol);
+        foreignCol.setMinWidth(200);
+        translationsCol.setMinWidth(400);
+        foreignCol.setMaxWidth(Double.MAX_VALUE);
+        translationsCol.setMaxWidth(Double.MAX_VALUE);
 
         foreignCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Word, String>, ObservableValue<String>>() {
             public ObservableValue<String> call(TableColumn.CellDataFeatures<Word, String> p) {
@@ -97,9 +98,13 @@ public class App extends Application {
         ObservableList<Word> items = FXCollections.observableList(sessions.get(session)
                 .stream().collect(Collectors.toList()));
         table.setItems(items);
+        table.autosize();
+        table.setMaxWidth(Double.MAX_VALUE);
+        table.setMaxHeight(Double.MAX_VALUE);
 
-        VBox vBox = new VBox(10);
-        vBox.getChildren().addAll(label, table);
+        VBox vBox = new VBox(10, label, table);
+        vBox.setMaxWidth(Double.MAX_VALUE);
+        vBox.setMaxHeight(Double.MAX_VALUE);
         return vBox;
     }
 

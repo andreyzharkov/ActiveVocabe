@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
 public class App extends Application {
-    public static final String testDirectory = "C:\\projects\\debug";
+    private final String rootDirectory;
 
     private Sessions sessions;
     private Set<Word> resentErrors;
@@ -41,7 +41,15 @@ public class App extends Application {
     private HBox root;
 
     public App() {
-        sessions = new Sessions(testDirectory);
+        rootDirectory = System.getProperty("user.dir") + File.separator + "root";
+        File checker = new File(rootDirectory);
+        if (!checker.exists()){
+            if (!checker.mkdir()){
+                System.err.println("access denied, try to start from another directory");
+                System.exit(1);
+            }
+        }
+        sessions = new Sessions(rootDirectory);
         resentErrors = Collections.synchronizedSet(new LinkedHashSet<>());
     }
 
@@ -53,7 +61,7 @@ public class App extends Application {
         hBox.getChildren().add(buildFileSystemBrowser());
         Separator sep = new Separator();
         sep.setOrientation(Orientation.VERTICAL);
-        hBox.getChildren().addAll(sep, getSessionViewPane("s1"));
+        hBox.getChildren().addAll(sep);
         root = hBox;
 
         Scene scene = new Scene(root, 800, 600);
@@ -147,7 +155,7 @@ public class App extends Application {
     }
 
     private TreeView buildFileSystemBrowser() {
-        FilePathTreeItem root = new FilePathTreeItem(new File(testDirectory));
+        FilePathTreeItem root = new FilePathTreeItem(new File(rootDirectory));
         treeView = new TreeView<>(root);
         treeView.setEditable(true);
         treeView.setCellFactory((TreeView<String> p) ->
@@ -300,7 +308,9 @@ public class App extends Application {
             MenuItem startQuiz = new MenuItem("quiz");
 
             viewWordsItem.setOnAction((e) -> {
-                root.getChildren().remove(2);
+                if (root.getChildren().size() > 2) {
+                    root.getChildren().remove(2);
+                }
                 root.getChildren().add(getSessionViewPane(((FilePathTreeItem) getTreeItem()).sessionName));
             });
             addWordsItem.setOnAction((e) -> {
@@ -459,11 +469,18 @@ public class App extends Application {
         TextField foreign = new TextField();
         foreign.setPromptText("foreign");
         TextField translation = new TextField();
-        translation.setPromptText("translations");
+        translation.setPromptText("tr-s, sep is \';\'");
         foreign.setOnAction((e) -> translation.requestFocus());
         translation.setOnAction((e) -> {
             List<String> tr = new ArrayList<>();
-            tr.add(translation.getText());
+            Arrays.asList(translation.getText().split(";")).forEach(t ->{
+                if (!t.equals("") && !t.matches("\\s")){
+                    tr.add(StringUtils.join(Arrays.stream(t.split("\\s"))
+                            .filter(s -> !s.equals(""))
+                            .collect(Collectors.toList()), " "));
+                }
+            });
+            System.out.println(tr);
             sessions.get(session).add(new Word(foreign.getText(), tr));
             saveSession(session);
             foreign.clear();

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<HBox xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.dron.activevocabe.controllers.RootPaneController" fx:id="root">
+    <children>
+        <TreeView fx:id="treeView"/>
+        <Separator orientation="VERTICAL"/>
+        <VBox>
+            <children>
+                <Label fx:id="label" text="Words in session:">
+
+                </Label>
+                <TableView fx:id="tableView">
+                    <columns>
+                        <TableColumn fx:id="foreignCol" text="Foreign">
+                        </TableColumn>
+                        <TableColumn fx:id="translationsCol" text="Translations">
+                        </TableColumn>
+                    </columns>
+                    <items>
+
+                    </items>
+                </TableView>
+            </children>
+        </VBox>
+    </children>
+</HBox>

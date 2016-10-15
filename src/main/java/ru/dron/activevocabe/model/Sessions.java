@@ -1,4 +1,4 @@
-package ru.dron.activevocabe;
+package ru.dron.activevocabe.model;
 
 import javafx.util.Pair;
 

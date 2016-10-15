@@ -1,5 +1,6 @@
 package ru.dron.activevocabe;
 
+import javafx.fxml.FXMLLoader;
 import org.apache.commons.lang3.StringUtils;
 import com.google.common.base.CaseFormat;
 import javafx.application.Application;
@@ -8,9 +9,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -22,46 +21,46 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import javafx.util.Callback;
+import ru.dron.activevocabe.controllers.RootPaneController;
+import ru.dron.activevocabe.controllers.SessionViewController;
+import ru.dron.activevocabe.model.Sessions;
+import ru.dron.activevocabe.model.SharedData;
+import ru.dron.activevocabe.model.Word;
 
 import java.io.*;
 import java.nio.file.*;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
 public class App extends Application {
-    private final String rootDirectory;
-
+    private String rootDirectory;
     private Sessions sessions;
     private Set<Word> resentErrors;
+
+    private SharedData sharedData;
+
     private TreeView<String> treeView;
     private HBox root;
-
-    public App() {
-        rootDirectory = System.getProperty("user.dir") + File.separator + "root";
-        File checker = new File(rootDirectory);
-        if (!checker.exists()){
-            if (!checker.mkdir()){
-                System.err.println("access denied, try to start from another directory");
-                System.exit(1);
-            }
-        }
-        sessions = new Sessions(rootDirectory);
-        resentErrors = Collections.synchronizedSet(new LinkedHashSet<>());
-    }
 
     @Override
     public void start(Stage primaryStage) {
         Stage mainStage = primaryStage;
 
         HBox hBox = new HBox();
-        hBox.getChildren().add(buildFileSystemBrowser());
-        Separator sep = new Separator();
-        sep.setOrientation(Orientation.VERTICAL);
-        hBox.getChildren().addAll(sep);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/RootPane.fxml"));
+            hBox = loader.load();
+            sharedData = ((RootPaneController) loader.getController()).getSharedData();
+
+            rootDirectory = sharedData.getRootDirectory();
+            sessions = sharedData.getSessions();
+            resentErrors = sharedData.getResentErrors();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.exit(1000);
+        }
         root = hBox;
 
         Scene scene = new Scene(root, 800, 600);
@@ -78,42 +77,52 @@ public class App extends Application {
     }
 
     private VBox getSessionViewPane(String session) {
-        TableView<Word> table = new TableView<>();
-
-        final Label label = new Label("Words in session " + session + ":");
-        label.setFont(new Font("Arial", 20));
-
-        TableColumn<Word, String> foreignCol = new TableColumn<>("Foreign");
-        TableColumn<Word, String> translationsCol = new TableColumn<>("Translations");
-
-        table.getColumns().setAll(foreignCol, translationsCol);
-        foreignCol.setMinWidth(200);
-        translationsCol.setMinWidth(400);
-        foreignCol.setMaxWidth(Double.MAX_VALUE);
-        translationsCol.setMaxWidth(Double.MAX_VALUE);
-
-        foreignCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Word, String>, ObservableValue<String>>() {
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<Word, String> p) {
-                // p.getValue() returns the Person instance for a particular TableView row
-                return new SimpleStringProperty(p.getValue().getForeign());
-            }
-        });
-
-        translationsCol.setCellValueFactory((p) -> {
-            return new SimpleStringProperty(StringUtils.join(p.getValue().getTranslations(), ", "));
-        });
-
-        ObservableList<Word> items = FXCollections.observableList(sessions.get(session)
-                .stream().collect(Collectors.toList()));
-        table.setItems(items);
-        table.autosize();
-        table.setMaxWidth(Double.MAX_VALUE);
-        table.setMaxHeight(Double.MAX_VALUE);
-
-        VBox vBox = new VBox(10, label, table);
-        vBox.setMaxWidth(Double.MAX_VALUE);
-        vBox.setMaxHeight(Double.MAX_VALUE);
-        return vBox;
+//        TableView<Word> table = new TableView<>();
+//
+//        final Label label = new Label("Words in session " + session + ":");
+//        label.setFont(new Font("Arial", 20));
+//
+//        TableColumn<Word, String> foreignCol = new TableColumn<>("Foreign");
+//        TableColumn<Word, String> translationsCol = new TableColumn<>("Translations");
+//
+//        table.getColumns().setAll(foreignCol, translationsCol);
+//        foreignCol.setMinWidth(200);
+//        translationsCol.setMinWidth(400);
+//        foreignCol.setMaxWidth(Double.MAX_VALUE);
+//        translationsCol.setMaxWidth(Double.MAX_VALUE);
+//
+//        foreignCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Word, String>, ObservableValue<String>>() {
+//            public ObservableValue<String> call(TableColumn.CellDataFeatures<Word, String> p) {
+//                // p.getValue() returns the Person instance for a particular TableView row
+//                return new SimpleStringProperty(p.getValue().getForeign());
+//            }
+//        });
+//
+//        translationsCol.setCellValueFactory((p) -> {
+//            return new SimpleStringProperty(StringUtils.join(p.getValue().getTranslations(), ", "));
+//        });
+//
+//        ObservableList<Word> items = FXCollections.observableList(sessions.get(session)
+//                .stream().collect(Collectors.toList()));
+//        table.setItems(items);
+//        table.autosize();
+//        table.setMaxWidth(Double.MAX_VALUE);
+//        table.setMaxHeight(Double.MAX_VALUE);
+//
+//        VBox vBox = new VBox(10, label, table);
+//        vBox.setMaxWidth(Double.MAX_VALUE);
+//        vBox.setMaxHeight(Double.MAX_VALUE);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource
+                    ("/fxml/SessionViewLayout.fxml"));
+            VBox vBox = loader.load();
+            ((SessionViewController) loader.getController()).update(sessions.get(session));
+            return vBox;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.exit(1500);
+        }
+        return new VBox();
     }
 
     private VBox getErrorsViewPane() {
@@ -473,8 +482,8 @@ public class App extends Application {
         foreign.setOnAction((e) -> translation.requestFocus());
         translation.setOnAction((e) -> {
             List<String> tr = new ArrayList<>();
-            Arrays.asList(translation.getText().split(";")).forEach(t ->{
-                if (!t.equals("") && !t.matches("\\s")){
+            Arrays.asList(translation.getText().split(";")).forEach(t -> {
+                if (!t.equals("") && !t.matches("\\s")) {
                     tr.add(StringUtils.join(Arrays.stream(t.split("\\s"))
                             .filter(s -> !s.equals(""))
                             .collect(Collectors.toList()), " "));
@@ -679,9 +688,9 @@ public class App extends Application {
 
         answer.setOnAction((e) -> {
             boolean correct;
-            if (properties.isQuestionsOnForeign()){
+            if (properties.isQuestionsOnForeign()) {
                 correct = testList.get(currentIndex).getTranslations().contains(answer.getText());
-            } else{
+            } else {
                 correct = testList.get(currentIndex).getForeign().equals(answer.getText());
             }
 

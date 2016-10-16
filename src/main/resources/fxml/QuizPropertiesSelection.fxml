@@ -11,10 +11,14 @@
 
 <?import javafx.scene.control.DialogPane?>
 <?import javafx.scene.control.ButtonType?>
-<DialogPane xmlns="http://javafx.com/javafx/8.0.101" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="ru.dron.activevocabe.controllers.QuizSelectionFormController">
-    <content>
-        <GridPane gridLinesVisible="true" xmlns="http://javafx.com/javafx/8.0.101" xmlns:fx="http://javafx.com/fxml/1">
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<AnchorPane xmlns="http://javafx.com/javafx/8.0.101" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ru.dron.activevocabe.controllers.QuizSelectionController">
+    <children>
+        <GridPane AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"
+        prefHeight="270">
             <columnConstraints>
                 <ColumnConstraints />
                 <ColumnConstraints />
@@ -29,29 +33,31 @@
             </rowConstraints>
             <children>
                 <Label text="Select quiz type:" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" />
-                <RadioButton text="Random" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                <RadioButton text="Rating" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                <RadioButton text="Session" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                <RadioButton text="Resent Errors" GridPane.columnIndex="0" GridPane.rowIndex="4" visible="false"/>
+                <RadioButton fx:id="randomBtn" onAction="#onAction" text="Random" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <RadioButton fx:id="ratingBtn" onAction="#onAction" text="Rating" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <RadioButton fx:id="sessionBtn" onAction="#onAction" text="Session" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <RadioButton fx:id="errorsBtn" onAction="#onAction" text="Resent Errors" GridPane.columnIndex="0" GridPane.rowIndex="4" visible="false"/>
 
-                <ChoiceBox prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                <ChoiceBox fx:id="sessionBox" onAction="#onAction" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                 <Label text="Words in test: " GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.columnSpan="2"/>
-                <TextField GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                <TextField fx:id="quizSize" onAction="#onAction" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
                 <Label text="Input" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
-                <RadioButton text="Foreign input" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                <RadioButton text="Translation input" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                <RadioButton fx:id="foreignInput" onAction="#onAction" text="Foreign input" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                <RadioButton fx:id="translationsInput" onAction="#onAction" text="Translation input" GridPane.columnIndex="1" GridPane.rowIndex="8" />
 
-                <Label text="Error! Check the form for errors!" GridPane.columnIndex="0" GridPane.rowIndex="9"
-                GridPane.columnSpan="2"/>
+                <Label fx:id="errorMsg" text="Error! Check the form for errors!" GridPane.columnIndex="0" GridPane.rowIndex="9"
+                visible="false" GridPane.columnSpan="2"/>
 
             </children>
         </GridPane>
-    </content>
-    <buttonTypes>
-        <ButtonType buttonData="OK_DONE" text="OK"/>
-        <ButtonType buttonData="CANCEL_CLOSE" text="Cancel"/>
-    </buttonTypes>
+        <HBox id="HBox" alignment="CENTER" minWidth="-1.0" spacing="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
+            <children>
+                <Button fx:id="okButton" disable="true" onAction="#handleOk" prefWidth="80.0" text="OK" />
+                <Button mnemonicParsing="false" onAction="#handleCancel" prefWidth="80.0" text="Cancel" />
+            </children>
+        </HBox>
+    </children>
 
-</DialogPane>
+</AnchorPane>
 

@@ -52,7 +52,9 @@ public class App extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/RootPane.fxml"));
             hBox = loader.load();
-            sharedData = ((RootPaneController) loader.getController()).getSharedData();
+            RootPaneController controller = loader.getController();
+            sharedData = controller.getSharedData();
+            controller.setStage(primaryStage);
 
             rootDirectory = sharedData.getRootDirectory();
             sessions = sharedData.getSessions();

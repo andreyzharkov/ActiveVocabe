@@ -6,20 +6,21 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <HBox xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="ru.dron.activevocabe.controllers.RootPaneController" fx:id="root">
+      fx:controller="ru.dron.activevocabe.controllers.RootPaneController" fx:id="root"
+      prefWidth="820" prefHeight="600">
     <children>
-        <TreeView fx:id="treeView"/>
+        <TreeView fx:id="treeView" prefWidth="200"/>
         <Separator orientation="VERTICAL"/>
         <VBox>
             <children>
                 <Label fx:id="label" text="Words in session:">
 
                 </Label>
-                <TableView fx:id="tableView">
+                <TableView fx:id="tableView" prefWidth="600" prefHeight="570">
                     <columns>
-                        <TableColumn fx:id="foreignCol" text="Foreign">
+                        <TableColumn fx:id="foreignCol" text="Foreign" prefWidth="200">
                         </TableColumn>
-                        <TableColumn fx:id="translationsCol" text="Translations">
+                        <TableColumn fx:id="translationsCol" text="Translations" prefWidth="382">
                         </TableColumn>
                     </columns>
                     <items>

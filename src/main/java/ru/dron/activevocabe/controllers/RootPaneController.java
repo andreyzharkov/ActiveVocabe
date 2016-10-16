@@ -65,7 +65,6 @@ public class RootPaneController {
 
         rootDirectory = sharedData.getRootDirectory();
         sessions = sharedData.getSessions();
-        resentErrors = sharedData.getResentErrors();
 
         FilePathTreeItem root = new FilePathTreeItem(new File(rootDirectory));
         treeView.setRoot(root);

@@ -55,10 +55,6 @@ public class App extends Application {
             RootPaneController controller = loader.getController();
             sharedData = controller.getSharedData();
             controller.setStage(primaryStage);
-
-            rootDirectory = sharedData.getRootDirectory();
-            sessions = sharedData.getSessions();
-            resentErrors = sharedData.getResentErrors();
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(1000);

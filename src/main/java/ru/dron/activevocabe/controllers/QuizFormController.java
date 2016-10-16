@@ -71,7 +71,8 @@ public class QuizFormController {
                     .collect(Collectors.toList());
         }
         if (properties.getQuizType().equals(QuizProperties.QuizType.ERRORS)) {
-            questionList = resentErrors.stream().collect(Collectors.toList());
+            questionList = sharedData.getSessions().getResentErrors()
+                    .stream().collect(Collectors.toList());
         }
 
         testList = questionList;
@@ -107,6 +108,7 @@ public class QuizFormController {
 
         if (!correct) {
             resentErrors.add(testList.get(currentIndex));
+            sharedData.getSessions().addError(testList.get(currentIndex));
         }
 
         sharedData.getSessions().getWord(testList.get(currentIndex)).updateKnowledge(correct);

@@ -15,7 +15,6 @@ import java.util.Set;
 public class SharedData {
     private final String rootDirectory;
     private Sessions sessions;
-    private Set<Word> resentErrors;
     private TreeView<String> treeView;
 
     public SharedData(TreeView<String> treeView) {
@@ -29,7 +28,6 @@ public class SharedData {
             }
         }
         sessions = new Sessions(rootDirectory);
-        resentErrors = Collections.synchronizedSet(new LinkedHashSet<>());
     }
 
     public String getRootDirectory() {
@@ -38,10 +36,6 @@ public class SharedData {
 
     public Sessions getSessions() {
         return sessions;
-    }
-
-    public Set<Word> getResentErrors() {
-        return resentErrors;
     }
 
     private String getSessionFileName(String session) {

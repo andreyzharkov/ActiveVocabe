@@ -113,6 +113,14 @@ public class Sessions {
         return vocabe.keySet();
     }
 
+    public Set<Word> getResentErrors(){
+        return resentErrors;
+    }
+
+    public void addError(Word w){
+        resentErrors.add(w);
+    }
+
     private Pair<String, Set<Word>> readSessionFromFile(File file) {
         String name = "";
         Set<Word> words = Collections.synchronizedSet(new LinkedHashSet<>());

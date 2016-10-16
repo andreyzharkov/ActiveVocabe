@@ -61,9 +61,14 @@ public class QuizSelectionController {
     public void setAttributes(SharedData sharedData, Stage stage) {
         this.sharedData = sharedData;
         this.stage = stage;
+
         sessionBox.setItems(FXCollections
                 .observableList(sharedData.getSessions().getKeys()
                         .stream().collect(Collectors.toList())));
+
+        if (sharedData.getSessions().getResentErrors().size() > 0) {
+            errorsBtn.setVisible(true);
+        }
     }
 
     public boolean isOkPressed() {

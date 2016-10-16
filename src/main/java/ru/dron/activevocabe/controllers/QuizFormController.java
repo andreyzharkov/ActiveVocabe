@@ -24,7 +24,6 @@ public class QuizFormController {
 
     private Stage dialogStage;
 
-    private int correctAnswers;
     private int currentIndex;
     private List<Word> testList;
 
@@ -40,17 +39,14 @@ public class QuizFormController {
 
     @FXML
     public void initialize() {
-
+        currentIndex = 0;
+        resentErrors = Collections.synchronizedSet(new HashSet<>());
     }
 
     public void setAttributes(SharedData sharedData, Stage dialogStage, QuizProperties quizProperties) {
         this.sharedData = sharedData;
         properties = quizProperties;
         this.dialogStage = dialogStage;
-
-        correctAnswers = 0;
-        currentIndex = 0;
-        resentErrors = Collections.synchronizedSet(new HashSet<>());
 
         List<Word> questionList = new ArrayList<>();
 
@@ -79,6 +75,19 @@ public class QuizFormController {
         }
 
         testList = questionList;
+////////////////////////////////////////////size > 0
+        if (properties.isQuestionsOnForeign()) {
+            question.setText(testList.get(currentIndex).getForeign());
+        } else {
+            question.setText(StringUtils.join(testList.get(currentIndex).getTranslations(), ", "));
+        }
+    }
+
+    public void setAttributes(SharedData sharedData, Stage dialogStage, QuizResult previousQuizResult) {
+        this.sharedData = sharedData;
+        this.dialogStage = dialogStage;
+        properties = previousQuizResult.properties;
+        this.testList = previousQuizResult.testWords;
 
         if (properties.isQuestionsOnForeign()) {
             question.setText(testList.get(currentIndex).getForeign());
@@ -96,9 +105,7 @@ public class QuizFormController {
             correct = testList.get(currentIndex).getForeign().equals(answer.getText());
         }
 
-        if (correct) {
-            correctAnswers++;
-        } else {
+        if (!correct) {
             resentErrors.add(testList.get(currentIndex));
         }
 
@@ -111,6 +118,9 @@ public class QuizFormController {
             isEndedNormally = true;
             dialogStage.close();
         } else {
+            if (currentIndex == testList.size() - 1) {
+                nextButton.setText("Finish");
+            }
             if (properties.isQuestionsOnForeign()) {
                 question.setText(testList.get(currentIndex).getForeign());
             } else {

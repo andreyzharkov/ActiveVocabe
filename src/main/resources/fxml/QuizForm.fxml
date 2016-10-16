@@ -15,7 +15,7 @@
         <VBox prefHeight="120" prefWidth="200" alignment="BASELINE_CENTER" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10">
             <children>
                 <Text fx:id="question" text="question"/>
-                <TextField fx:id="answer" promptText="your answer here"/>
+                <TextField fx:id="answer" promptText="your answer here" onAction="#onNextPressed"/>
             </children>
         </VBox>
         <HBox id="HBox" alignment="CENTER" minWidth="-1.0" spacing="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">

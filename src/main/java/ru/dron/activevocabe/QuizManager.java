@@ -19,6 +19,7 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
 import ru.dron.activevocabe.controllers.QuizFormController;
+import ru.dron.activevocabe.controllers.QuizResultModalController;
 import ru.dron.activevocabe.controllers.QuizSelectionController;
 import ru.dron.activevocabe.model.*;
 
@@ -181,63 +182,76 @@ public class QuizManager {
         }
     }
 
-    private void showQuizResult(QuizResult quizResult) {
-        int wordsInQuiz = quizResult.testWords.size();
-        int correctAnswers = wordsInQuiz - quizResult.errors.size();
-        resentErrors = quizResult.errors;
+    private void showQuizDialog(QuizResult quizResult) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/QuizForm.fxml"));
+            AnchorPane page = (AnchorPane) loader.load();
 
-        Text persentage = new Text((new DecimalFormat("#.00")).format(
-                ((double) correctAnswers) / wordsInQuiz * 100) + "%");
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Quiz");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(parentStage);
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
 
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setOpaqueInsets(new Insets(10, 10, 10, 10));
+            QuizFormController controller = loader.getController();
+            controller.setAttributes(sharedData, dialogStage, quizResult);
 
-        grid.add(persentage, 0, 0);
-        grid.add(getErrorsViewPane(), 0, 1, 10, 10);
+            dialogStage.showAndWait();
 
-        Dialog dialog = new Dialog();
-        dialog.getDialogPane().setContent(grid);
-        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK);
-        dialog.showAndWait();
+            if (controller.wasEndedNormally()) {
+                showQuizResult(controller.getResult());
+            }
+        } catch (Exception e) {
+            // Exception gets thrown if the fxml file could not be loaded
+            e.printStackTrace();
+            System.exit(1500);
+        }
     }
 
-    private VBox getErrorsViewPane() {
-        if (resentErrors.size() == 0) {
-            Text congratulation = new Text("Congratulations! You made no mistakes in this test!");
-            VBox vBox = new VBox();
-            vBox.getChildren().add(congratulation);
-            return vBox;
-        }
+    private void showQuizResult(QuizResult quizResult) {
+//        int wordsInQuiz = quizResult.testWords.size();
+//        int correctAnswers = wordsInQuiz - quizResult.errors.size();
+//        resentErrors = quizResult.errors;
+//
+//        Text persentage = new Text((new DecimalFormat("#.00")).format(
+//                ((double) correctAnswers) / wordsInQuiz * 100) + "%");
+//
+//        GridPane grid = new GridPane();
+//        grid.setHgap(10);
+//        grid.setVgap(10);
+//        grid.setOpaqueInsets(new Insets(10, 10, 10, 10));
+//
+//        grid.add(persentage, 0, 0);
+//        grid.add(getErrorsViewPane(), 0, 1, 10, 10);
+//
+//        Dialog dialog = new Dialog();
+//        dialog.getDialogPane().setContent(grid);
+//        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK);
+//        dialog.showAndWait();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/QuizResults.fxml"));
+            AnchorPane page = (AnchorPane) loader.load();
 
-        TableView<Word> table = new TableView<>();
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Quiz results");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(parentStage);
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
 
-        final Label label = new Label("Your errors:");
-        label.setFont(new Font("Arial", 20));
+            QuizResultModalController controller = loader.getController();
+            controller.setAttributes(dialogStage, quizResult);
 
-        TableColumn<Word, String> foreignCol = new TableColumn<>("Foreign");
-        TableColumn<Word, String> translationsCol = new TableColumn<>("Translations");
+            dialogStage.showAndWait();
 
-        table.getColumns().addAll(foreignCol, translationsCol);
-
-        foreignCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<Word, String>, ObservableValue<String>>() {
-            public ObservableValue<String> call(TableColumn.CellDataFeatures<Word, String> p) {
-                // p.getValue() returns the Person instance for a particular TableView row
-                return new SimpleStringProperty(p.getValue().getForeign());
+            if (controller.isRepassRequired()) {
+                showQuizDialog(quizResult);
             }
-        });
-
-        translationsCol.setCellValueFactory((p) -> {
-            return new SimpleStringProperty(StringUtils.join(p.getValue().getTranslations(), ", "));
-        });
-
-        ObservableList<Word> items = FXCollections.observableList(resentErrors
-                .stream().collect(Collectors.toList()));
-        table.setItems(items);
-
-        VBox vBox = new VBox(10);
-        vBox.getChildren().addAll(label, table);
-        return vBox;
+        } catch (Exception e) {
+            // Exception gets thrown if the fxml file could not be loaded
+            e.printStackTrace();
+            System.exit(1500);
+        }
     }
 }

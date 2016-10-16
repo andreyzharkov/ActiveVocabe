@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<AnchorPane xmlns="http://javafx.com/javafx/8.0.101" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ru.dron.activevocabe.controllers.QuizResultModalController">
+    <children>
+        <VBox fx:id="vBox" spacing="10" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10"
+              AnchorPane.rightAnchor="10" prefHeight="483">
+            <children>
+                <Label fx:id="scoreLabel" text="Correct answers: "/>
+                <Label text="Remember your mistakes:"/>
+                <TableView fx:id="tableView" prefHeight="378" prefWidth="600">
+                    <columns>
+                        <TableColumn fx:id="foreignCol" text="Foreign" prefWidth="200">
+                        </TableColumn>
+                        <TableColumn fx:id="translationsCol" text="Translations" prefWidth="400">
+                        </TableColumn>
+                    </columns>
+                    <items>
+                    </items>
+                </TableView>
+            </children>
+        </VBox>
+        <HBox id="HBox" alignment="CENTER" minWidth="-1.0" spacing="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
+            <opaqueInsets>
+                <Insets bottom="10" top="10" left="10" right="10"/>
+            </opaqueInsets>
+            <children>
+                <Button fx:id="repassButton" onAction="#repass" prefWidth="80.0" text="repass"/>
+                <Button fx:id="okButton" onAction="#onOkPressed" prefWidth="80.0" text="OK" />
+            </children>
+        </HBox>
+    </children>
+</AnchorPane>

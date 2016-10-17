@@ -38,7 +38,7 @@ public class QuizSelectionController {
     @FXML
     private Button okButton;
 
-    private SharedData sharedData;
+    private SharedData sharedData = SharedData.getSharedData();
     private Stage stage;
     private QuizProperties quizProperties;
 
@@ -58,8 +58,7 @@ public class QuizSelectionController {
         translationsInput.setToggleGroup(inputGroup);
     }
 
-    public void setAttributes(SharedData sharedData, Stage stage) {
-        this.sharedData = sharedData;
+    public void setAttributes(Stage stage) {
         this.stage = stage;
 
         sessionBox.setItems(FXCollections

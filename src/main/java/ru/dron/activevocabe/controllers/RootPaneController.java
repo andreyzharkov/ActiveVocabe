@@ -39,12 +39,8 @@ import java.util.stream.Collectors;
  * Created by Andrey on 15.10.2016.
  */
 public class RootPaneController {
-    private String rootDirectory;
-    private Sessions sessions;
-    private Set<Word> resentErrors;
-
-    private SharedData sharedData;
-    private Stage rootStage;
+    private SharedData sharedData = SharedData.getSharedData();
+    private Stage rootStage = sharedData.getRootStage();
 
     @FXML
     private HBox root;
@@ -61,12 +57,10 @@ public class RootPaneController {
 
     @FXML
     public void initialize() {
-        sharedData = new SharedData(treeView);
+        sharedData.setTreeView(treeView);
 
-        rootDirectory = sharedData.getRootDirectory();
-        sessions = sharedData.getSessions();
-
-        FilePathTreeItem root = new FilePathTreeItem(new File(rootDirectory));
+        FilePathTreeItem root = new FilePathTreeItem(new File(sharedData.getRootDirectory()));
+        root.setExpanded(true);
         treeView.setRoot(root);
         treeView.setEditable(true);
         treeView.setCellFactory((TreeView<String> p) ->
@@ -80,12 +74,8 @@ public class RootPaneController {
                         .join(p.getValue().getTranslations(), ", ")));
     }
 
-    public void setStage(Stage stage){
-        rootStage = stage;
-    }
-
-    public void updateWordsTable(String session) {
-        ObservableList<Word> items = FXCollections.observableList(sessions.get(session)
+    private void updateWordsTable(String session) {
+        ObservableList<Word> items = FXCollections.observableList(sharedData.getSessions().get(session)
                 .stream().collect(Collectors.toList()));
         tableView.setItems(items);
 
@@ -195,7 +185,7 @@ public class RootPaneController {
         private final ContextMenu folderMenu = new ContextMenu();
         private final ContextMenu sessionMenu = new ContextMenu();
 
-        public TextFieldTreeCellImpl() {
+        TextFieldTreeCellImpl() {
             MenuItem addMenuItem = new MenuItem("Add Session");
             addMenuItem.setOnAction((ActionEvent t) -> {
                 String newSession = "s" + Integer.toString((new Random()).nextInt());
@@ -204,17 +194,8 @@ public class RootPaneController {
                     newSession = "s" + Integer.toString((new Random()).nextInt());
                     file = new File(((FilePathTreeItem) getTreeItem()).getFullPath(), newSession);
                 }
-                sessions.add("new session");
+                sharedData.getSessions().add("new session");
 
-//                try {
-//                    if (!file.createNewFile()) {
-//                        System.err.println("cannot create file!");
-//                        System.exit(3);
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    System.exit(3);
-//                }
                 getTreeItem().getChildren().add(new FilePathTreeItem(file, "new session"));
             });
 
@@ -239,9 +220,9 @@ public class RootPaneController {
             viewWordsItem.setOnAction((e) -> {
                 updateWordsTable(((FilePathTreeItem) getTreeItem()).sessionName);
             });
-//            addWordsItem.setOnAction((e) -> {
-//                showAddWordPane(((FilePathTreeItem) getTreeItem()).sessionName);
-//            });
+            addWordsItem.setOnAction((e) -> {
+                showAddWordPane(((FilePathTreeItem) getTreeItem()).sessionName);
+            });
             startQuiz.setOnAction((e) -> {
                 showSelectQuizTypeDialog();
             });
@@ -268,7 +249,7 @@ public class RootPaneController {
             FilePathTreeItem item = (FilePathTreeItem) getTreeItem();
 
             if (!newValue.equals("") &&
-                    (!sessions.contains(newValue) || item.isDirectory())) {
+                    (!sharedData.getSessions().contains(newValue) || item.isDirectory())) {
 
                 File file = new File(item.getFullPath());
                 if (item.isDirectory()) {
@@ -284,9 +265,9 @@ public class RootPaneController {
                         super.commitEdit(newValue);
                     }
                 } else {
-                    sessions.rename(getItem(), newValue);
+                    sharedData.getSessions().rename(getItem(), newValue);
                     item.sessionName = newValue;
-                    if (sessions.get(newValue).size() > 0) {
+                    if (sharedData.getSessions().get(newValue).size() > 0) {
                         sharedData.saveSession(newValue);
                     }
 
@@ -301,7 +282,7 @@ public class RootPaneController {
                     alert.setContentText("Enter session name, session name is not changed.");
                     alert.showAndWait();
                 }
-                if (sessions.contains(newValue)) {
+                if (sharedData.getSessions().contains(newValue)) {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Error!");
                     alert.setContentText("Session with the same name already exists, try to use another name or" +
@@ -362,12 +343,46 @@ public class RootPaneController {
         }
     }
 
-    public SharedData getSharedData() {
-        return sharedData;
+    private void showSelectQuizTypeDialog() {
+        QuizManager manager = new QuizManager(rootStage);
+        manager.run();
     }
 
-    private void showSelectQuizTypeDialog() {
-        QuizManager manager = new QuizManager(rootStage, sharedData);
-        manager.run();
+    private void showAddWordPane(String session) {
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setOpaqueInsets(new Insets(10, 10, 10, 10));
+
+        TextField foreign = new TextField();
+        foreign.setPromptText("foreign");
+        TextField translation = new TextField();
+        translation.setPromptText("tr-s, sep is \';\'");
+        foreign.setOnAction((e) -> translation.requestFocus());
+        translation.setOnAction((e) -> {
+            List<String> tr = new ArrayList<>();
+            Arrays.asList(translation.getText().split(";")).forEach(t -> {
+                if (!t.equals("") && !t.matches("\\s")) {
+                    tr.add(StringUtils.join(Arrays.stream(t.split("\\s"))
+                            .filter(s -> !s.equals(""))
+                            .collect(Collectors.toList()), " "));
+                }
+            });
+            System.out.println(tr);
+            sharedData.getSessions().get(session).add(new Word(foreign.getText(), tr));
+            sharedData.saveSession(session);
+            foreign.clear();
+            translation.clear();
+            foreign.requestFocus();
+        });
+
+        grid.addRow(0, foreign, translation);
+        Dialog<Boolean> dialog = new Dialog<>();
+        DialogPane dialogPane = new DialogPane();
+        dialogPane.setContent(grid);
+        dialog.setDialogPane(dialogPane);
+        dialog.setTitle("Add new word to session " + session);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.showAndWait();
     }
 }

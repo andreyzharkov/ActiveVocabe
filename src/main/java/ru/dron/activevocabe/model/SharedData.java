@@ -1,6 +1,7 @@
 package ru.dron.activevocabe.model;
 
 import javafx.scene.control.TreeView;
+import javafx.stage.Stage;
 import ru.dron.activevocabe.controllers.RootPaneController;
 
 import java.io.File;
@@ -15,10 +16,12 @@ import java.util.Set;
 public class SharedData {
     private final String rootDirectory;
     private Sessions sessions;
+    private Stage rootStage;
     private TreeView<String> treeView;
 
-    public SharedData(TreeView<String> treeView) {
-        this.treeView = treeView;
+    private static SharedData sharedData;
+
+    public SharedData() {
         rootDirectory = System.getProperty("user.dir") + File.separator + "root";
         File checker = new File(rootDirectory);
         if (!checker.exists()) {
@@ -30,8 +33,28 @@ public class SharedData {
         sessions = new Sessions(rootDirectory);
     }
 
+    //it should be called only once. need to set protection
+    public void setTreeView(TreeView<String> treeView) {
+        this.treeView = treeView;
+    }
+
+    public void setRootStage(Stage rootStage) {
+        this.rootStage = rootStage;
+    }
+
+    public static SharedData getSharedData() {
+        if (sharedData == null) {
+            sharedData = new SharedData();
+        }
+        return sharedData;
+    }
+
     public String getRootDirectory() {
         return rootDirectory;
+    }
+
+    public Stage getRootStage(){
+        return rootStage;
     }
 
     public Sessions getSessions() {

@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * Created by Andrey on 16.10.2016.
  */
 public class QuizFormController {
-    private SharedData sharedData;
+    private SharedData sharedData = SharedData.getSharedData();
     private Set<Word> resentErrors;
     private QuizProperties properties;
 
@@ -43,8 +43,7 @@ public class QuizFormController {
         resentErrors = Collections.synchronizedSet(new HashSet<>());
     }
 
-    public void setAttributes(SharedData sharedData, Stage dialogStage, QuizProperties quizProperties) {
-        this.sharedData = sharedData;
+    public void setAttributes(Stage dialogStage, QuizProperties quizProperties) {
         properties = quizProperties;
         this.dialogStage = dialogStage;
 
@@ -84,7 +83,7 @@ public class QuizFormController {
         }
     }
 
-    public void setAttributes(SharedData sharedData, Stage dialogStage, QuizResult previousQuizResult) {
+    public void setAttributes(Stage dialogStage, QuizResult previousQuizResult) {
         this.sharedData = sharedData;
         this.dialogStage = dialogStage;
         properties = previousQuizResult.properties;

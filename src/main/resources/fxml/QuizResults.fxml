@@ -2,10 +2,8 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<AnchorPane xmlns="http://javafx.com/javafx/8.0.101" xmlns:fx="http://javafx.com/fxml/1"
+<AnchorPane fx:id="root" xmlns="http://javafx.com/javafx/8.0.101" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="ru.dron.activevocabe.controllers.QuizResultModalController">
     <children>
         <VBox fx:id="vBox" spacing="10" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10"

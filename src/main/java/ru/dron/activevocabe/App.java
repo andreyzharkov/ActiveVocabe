@@ -5,7 +5,6 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import ru.dron.activevocabe.controllers.RootPaneController;
 import ru.dron.activevocabe.model.SharedData;
 
 public class App extends Application {

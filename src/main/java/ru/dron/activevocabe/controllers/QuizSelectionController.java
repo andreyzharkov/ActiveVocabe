@@ -1,10 +1,13 @@
 package ru.dron.activevocabe.controllers;
 
 import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import ru.dron.activevocabe.QuizManager;
 import ru.dron.activevocabe.model.QuizProperties;
 import ru.dron.activevocabe.model.SharedData;
 
@@ -13,10 +16,12 @@ import java.util.stream.Collectors;
 /**
  * Created by Andrey on 15.10.2016.
  */
-public class QuizSelectionController {
+public class QuizSelectionController extends DialogController {
     private ToggleGroup typeGroup;
     private ToggleGroup inputGroup;
 
+    @FXML
+    private AnchorPane root;
     @FXML
     private RadioButton randomBtn;
     @FXML
@@ -39,10 +44,8 @@ public class QuizSelectionController {
     private Button okButton;
 
     private SharedData sharedData = SharedData.getSharedData();
-    private Stage stage;
+    private QuizManager quizManager = QuizManager.getInstance();
     private QuizProperties quizProperties;
-
-    private boolean wasOkPressed = false;
 
     @FXML
     public void initialize() {
@@ -56,10 +59,13 @@ public class QuizSelectionController {
 
         foreignInput.setToggleGroup(inputGroup);
         translationsInput.setToggleGroup(inputGroup);
-    }
 
-    public void setAttributes(Stage stage) {
-        this.stage = stage;
+        dialogStage = new Stage();
+        dialogStage.setTitle("Select quiz settings");
+        dialogStage.initModality(Modality.WINDOW_MODAL);
+        dialogStage.initOwner(sharedData.getRootStage());
+        Scene scene = new Scene(root);
+        dialogStage.setScene(scene);
 
         sessionBox.setItems(FXCollections
                 .observableList(sharedData.getSessions().getKeys()
@@ -70,23 +76,17 @@ public class QuizSelectionController {
         }
     }
 
-    public boolean isOkPressed() {
-        return wasOkPressed;
-    }
-
-    public QuizProperties getQuizProperties() {
-        return quizProperties;
-    }
-
     @FXML
     private void handleOk() {
-        wasOkPressed = true;
-        stage.close();
+        sharedData.setLastQuizProperties(quizProperties);
+        quizManager.setQuizSelectionFinished(true);
+        dialogStage.close();
     }
 
     @FXML
     private void handleCancel() {
-        stage.close();
+        quizManager.setQuizSelectionFinished(false);
+        dialogStage.close();
     }
 
     @FXML

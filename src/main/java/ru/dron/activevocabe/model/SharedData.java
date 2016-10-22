@@ -6,9 +6,6 @@ import ru.dron.activevocabe.controllers.RootPaneController;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 /**
  * Created by Andrey on 15.10.2016.
@@ -19,7 +16,18 @@ public class SharedData {
     private Stage rootStage;
     private TreeView<String> treeView;
 
+    private QuizProperties lastQuizProperties;
+    private QuizResult lastQuizResult;
+    private boolean repassRequired = false;
+
     private static SharedData sharedData;
+
+    public static SharedData getSharedData() {
+        if (sharedData == null) {
+            sharedData = new SharedData();
+        }
+        return sharedData;
+    }
 
     public SharedData() {
         rootDirectory = System.getProperty("user.dir") + File.separator + "root";
@@ -42,18 +50,35 @@ public class SharedData {
         this.rootStage = rootStage;
     }
 
-    public static SharedData getSharedData() {
-        if (sharedData == null) {
-            sharedData = new SharedData();
-        }
-        return sharedData;
+    public void setLastQuizProperties(QuizProperties newProperties) {
+        lastQuizProperties = newProperties;
+    }
+
+    public QuizProperties getLastQuizProperties() {
+        return lastQuizProperties;
+    }
+
+    public void setLastQuizResult(QuizResult result) {
+        lastQuizResult = result;
+    }
+
+    public QuizResult getLastQuizResult() {
+        return lastQuizResult;
+    }
+
+    public void setRepassRequired(boolean required){
+        repassRequired = required;
+    }
+
+    public boolean isRepassRequired(){
+        return repassRequired;
     }
 
     public String getRootDirectory() {
         return rootDirectory;
     }
 
-    public Stage getRootStage(){
+    public Stage getRootStage() {
         return rootStage;
     }
 

@@ -1,29 +1,18 @@
 package ru.dron.activevocabe.controllers;
 
-import com.google.common.base.CaseFormat;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
-import javafx.util.Callback;
 import org.apache.commons.lang3.StringUtils;
 import ru.dron.activevocabe.QuizManager;
-import ru.dron.activevocabe.model.QuizProperties;
-import ru.dron.activevocabe.model.Sessions;
 import ru.dron.activevocabe.model.SharedData;
 import ru.dron.activevocabe.model.Word;
 
@@ -31,7 +20,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,7 +28,6 @@ import java.util.stream.Collectors;
  */
 public class RootPaneController {
     private SharedData sharedData = SharedData.getSharedData();
-    private Stage rootStage = sharedData.getRootStage();
 
     @FXML
     private HBox root;
@@ -224,7 +211,7 @@ public class RootPaneController {
                 showAddWordPane(((FilePathTreeItem) getTreeItem()).sessionName);
             });
             startQuiz.setOnAction((e) -> {
-                showSelectQuizTypeDialog();
+                QuizManager.getInstance().run();
             });
 
             sessionMenu.getItems().addAll(addWordsItem, viewWordsItem, startQuiz);
@@ -341,11 +328,6 @@ public class RootPaneController {
         private String getString() {
             return getItem() == null ? "" : getItem();
         }
-    }
-
-    private void showSelectQuizTypeDialog() {
-        QuizManager manager = new QuizManager(rootStage);
-        manager.run();
     }
 
     private void showAddWordPane(String session) {

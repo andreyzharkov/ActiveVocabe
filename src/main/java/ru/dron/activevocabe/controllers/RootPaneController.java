@@ -9,10 +9,12 @@ import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import org.apache.commons.lang3.StringUtils;
 import ru.dron.activevocabe.QuizManager;
+import ru.dron.activevocabe.controls.PTableView;
 import ru.dron.activevocabe.model.SharedData;
 import ru.dron.activevocabe.model.Word;
 
@@ -30,7 +32,7 @@ public class RootPaneController {
     private SharedData sharedData = SharedData.getSharedData();
 
     @FXML
-    private HBox root;
+    private AnchorPane root;
     @FXML
     private Label label;
     @FXML

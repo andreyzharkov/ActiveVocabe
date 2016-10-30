@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.text.Text?>
+<AnchorPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ru.dron.activevocabe.controllers.FileReaderController" fx:id="root">
+    <children>
+        <VBox AnchorPane.leftAnchor="10" AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="60"
+              AnchorPane.rightAnchor="10" prefWidth="300" spacing="10">
+            <Label text="Preprosessing:"/>
+            <CheckBox fx:id="removeNumbers" text="remove numbers?"/>
+            <CheckBox fx:id="removeBrackets" text="remove brackets?"/>
+            <CheckBox fx:id="removePunctuation" text="remove punctuation?"/>
+            <Label text="Separators:"/>
+            <TextField fx:id="ftSepString" promptText="string between foreign and translations"/>
+            <TextField fx:id="trSepString" promptText="string between different translations"/>
+            <Label text="Choose file:"/>
+            <Text fx:id="filePath" text="C:\projects\debug\yy.txt"/>
+            <Button onAction="#openFileChooser" prefWidth="100.0" text="choose file"/>
+        </VBox>
+        <HBox id="HBox" spacing="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
+            <children>
+                <Button onAction="#onOkPressed" prefWidth="80.0" text="OK" />
+                <Button onAction="#onCancelPressed" prefWidth="80.0" text="Cancel" />
+            </children>
+        </HBox>
+    </children>
+</AnchorPane>

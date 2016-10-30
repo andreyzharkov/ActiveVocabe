@@ -29,6 +29,9 @@
                 </PTableView>
             </children>
         </VBox>
-        <Button prefWidth="80.0" text="Quiz" AnchorPane.bottomAnchor="10" AnchorPane.leftAnchor="30"/>
+        <HBox AnchorPane.leftAnchor="30" AnchorPane.bottomAnchor="10" spacing="10">
+            <Button fx:id="quizBtn" prefWidth="80.0" text="Quiz"/>
+            <Button fx:id="loadBtn" prefWidth="80.0" text="Load" onAction="#onLoadPressed"/>
+        </HBox>
     </children>
 </AnchorPane>

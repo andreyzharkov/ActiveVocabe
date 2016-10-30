@@ -14,6 +14,7 @@ public class SharedData {
     private final String rootDirectory;
     private Sessions sessions;
     private Stage rootStage;
+    private String currentSession;
     private TreeView<String> treeView;
 
     private QuizProperties lastQuizProperties;
@@ -66,11 +67,11 @@ public class SharedData {
         return lastQuizResult;
     }
 
-    public void setRepassRequired(boolean required){
+    public void setRepassRequired(boolean required) {
         repassRequired = required;
     }
 
-    public boolean isRepassRequired(){
+    public boolean isRepassRequired() {
         return repassRequired;
     }
 
@@ -80,6 +81,14 @@ public class SharedData {
 
     public Stage getRootStage() {
         return rootStage;
+    }
+
+    public void setCurrentSession(String session) {
+        currentSession = session;
+    }
+
+    public String getCurrentSession() {
+        return currentSession;
     }
 
     public Sessions getSessions() {

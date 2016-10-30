@@ -5,6 +5,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -13,6 +14,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import org.apache.commons.lang3.StringUtils;
+import ru.dron.activevocabe.FileTransformer;
 import ru.dron.activevocabe.QuizManager;
 import ru.dron.activevocabe.controls.PTableView;
 import ru.dron.activevocabe.model.SharedData;
@@ -64,6 +66,7 @@ public class RootPaneController {
     }
 
     private void updateWordsTable(String session) {
+        sharedData.setCurrentSession(session);
         ObservableList<Word> items = FXCollections.observableList(sharedData.getSessions().get(session)
                 .stream().collect(Collectors.toList()));
         tableView.setItems(items);
@@ -368,5 +371,21 @@ public class RootPaneController {
         dialog.setTitle("Add new word to session " + session);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.showAndWait();
+    }
+
+    @FXML
+    private void onLoadPressed(){
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/FileReader.fxml"));
+            loader.load();
+
+            ((DialogController) loader.getController()).getDialogStage().showAndWait();
+
+            System.out.println(FileTransformer.getInstance().readFile());
+        } catch (Exception e) {
+            // Exception gets thrown if the fxml file could not be loaded
+            e.printStackTrace();
+            System.exit(1500);
+        }
     }
 }

@@ -16,7 +16,6 @@ public class Sessions {
     //хер знает как это поле лучше назвать
     private Map<String, Set<Word>> vocabe;
     private Set<Word> resentErrors;
-    private String workingDirectory = "C:\\projects\\debug";
 
     public Sessions() {
         resentErrors = Collections.synchronizedSet(new LinkedHashSet<>());
@@ -24,7 +23,6 @@ public class Sessions {
     }
 
     public Sessions(String workingDirectory) {
-        this.workingDirectory = workingDirectory;
         resentErrors = Collections.synchronizedSet(new LinkedHashSet<>());
         vocabe = Collections.synchronizedMap(new LinkedHashMap<>());
 

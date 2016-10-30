@@ -11,9 +11,11 @@ import java.util.List;
  * Created by Andrey on 06.09.2016.
  */
 public class Word {
-    protected String foreign;
-    protected List<String> translations;
-    protected int knowledge;
+    public static final String TRANSLATION_SEPARATOR = "; ";
+
+    private String foreign;
+    private List<String> translations;
+    private int knowledge;
 
     public Word(String foreign, List<String> translations) {
         this.foreign = foreign;
@@ -53,13 +55,13 @@ public class Word {
         }
     }
 
-    public boolean checkAnswerForeign(String answer){
+    public boolean checkAnswerForeign(String answer) {
         return foreign.equals(answer);
     }
 
-    public boolean checkAnswerTranslation(String answer){
-        for (String translation: translations){
-            if (translation.equals(answer)){
+    public boolean checkAnswerTranslation(String answer) {
+        for (String translation : translations) {
+            if (translation.equals(answer)) {
                 return true;
             }
         }
@@ -68,14 +70,14 @@ public class Word {
 
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof Word){
-            return foreign.equals(((Word)obj).foreign);
+        if (obj instanceof Word) {
+            return foreign.equals(((Word) obj).foreign);
         }
         return super.equals(obj);
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return String.join(System.lineSeparator(), foreign, "[",
                 StringUtils.join(translations, System.lineSeparator()),
                 "]", Integer.toString(knowledge));

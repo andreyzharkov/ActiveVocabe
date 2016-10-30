@@ -16,13 +16,17 @@ import ru.dron.activevocabe.model.SharedData;
 import ru.dron.activevocabe.model.Word;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
+
+import static ru.dron.activevocabe.model.Word.TRANSLATION_SEPARATOR;
 
 /**
  * Created by Andrey on 30.10.2016.
  */
 public class WordsCheckController extends DialogController {
     SharedData sharedData = SharedData.getSharedData();
+
     @FXML
     private AnchorPane root;
     @FXML
@@ -50,6 +54,11 @@ public class WordsCheckController extends DialogController {
         foreignCol.setCellFactory(TextFieldTableCell.forTableColumn());
         translationsCol.setCellValueFactory(new PropertyValueFactory<>("translation"));
         translationsCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        foreignCol.setOnEditCommit((t) -> t.getTableView().getItems()
+                .get(t.getTablePosition().getRow()).setForeign(t.getNewValue()));
+        translationsCol.setOnEditCommit((t) -> t.getTableView().getItems()
+                .get(t.getTablePosition().getRow()).setTranslation(t.getNewValue()));
+
         tableView.setEditable(true);
         if (words != null) {
             tableView.setItems(words);
@@ -67,23 +76,28 @@ public class WordsCheckController extends DialogController {
     @FXML
     private void onOk() {
         sharedData.getSessions().addAll(sharedData.getCurrentSession(),
-                tableView.getItems().stream().map(w -> w.getWord()).collect(Collectors.toList()));
+                tableView.getItems().stream().map(TWord::getWord).collect(Collectors.toList()));
+        sharedData.saveSession(sharedData.getCurrentSession());
         dialogStage.close();
     }
 
-    public static class TWord extends Word {
+    public static class TWord {
         private final SimpleStringProperty foreign;
         private final SimpleStringProperty translation;
 
         public TWord(Word w) {
-            super(w.getForeign(), w.getTranslations());
             this.foreign = new SimpleStringProperty(w.getForeign());
             this.translation = new SimpleStringProperty(StringUtils
-                    .join(w.getTranslations(), ", "));
+                    .join(w.getTranslations(), TRANSLATION_SEPARATOR));
         }
 
         public Word getWord() {
-            return new Word(super.foreign, super.translations);
+            String foreign = getForeign().replaceAll("(^\\s*|\\s*$)", "");
+            List<String> translations = Arrays.stream(getTranslation().split(TRANSLATION_SEPARATOR))
+                    .map(s -> s.replaceAll("(^\\s*|\\s*$)", ""))
+                    .filter(s -> !s.equals(""))
+                    .collect(Collectors.toList());
+            return new Word(foreign, translations);
         }
 
         public String getForeign() {
@@ -91,7 +105,6 @@ public class WordsCheckController extends DialogController {
         }
 
         public void setForeign(String foreign_) {
-            super.foreign = foreign_;
             foreign.set(foreign_);
         }
 
@@ -100,9 +113,6 @@ public class WordsCheckController extends DialogController {
         }
 
         public void setTranslation(String tr) {
-            super.translations = Arrays.asList(tr.split(","));
-            super.translations.forEach((s) -> Arrays.stream(s.split("\\s"))
-                    .filter((s0) -> !s0.equals("")).reduce((s1, s2) -> s1 + " " + s2));
             translation.set(tr);
         }
     }

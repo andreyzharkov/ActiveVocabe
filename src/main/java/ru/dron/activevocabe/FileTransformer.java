@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 /**
  * Created by Andrey on 23.10.2016.
  */
+//осталось добавить возможность выбрать кодировку файла
+//и нормально считывать \ -> \, а на \ -> \\
 public class FileTransformer {
     public static FileTransformer getInstance() {
         if (instance == null) {

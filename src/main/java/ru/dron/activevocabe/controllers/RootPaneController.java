@@ -8,16 +8,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import org.apache.commons.lang3.StringUtils;
 import ru.dron.activevocabe.FileTransformer;
 import ru.dron.activevocabe.QuizManager;
-import ru.dron.activevocabe.controls.PTableView;
 import ru.dron.activevocabe.model.SharedData;
 import ru.dron.activevocabe.model.Word;
 
@@ -27,6 +24,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ru.dron.activevocabe.model.Word.TRANSLATION_SEPARATOR;
 
 /**
  * Created by Andrey on 15.10.2016.
@@ -63,7 +62,7 @@ public class RootPaneController {
                 new SimpleStringProperty(p.getValue().getForeign()));
         translationsCol.setCellValueFactory(p ->
                 new SimpleStringProperty(StringUtils
-                        .join(p.getValue().getTranslations(), ", ")));
+                        .join(p.getValue().getTranslations(), TRANSLATION_SEPARATOR)));
     }
 
     private void updateWordsTable(String session) {
@@ -375,28 +374,29 @@ public class RootPaneController {
     }
 
     @FXML
-    private void onLoadPressed(){
+    private void onLoadPressed() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/FileReader.fxml"));
             loader.load();
 
             ((DialogController) loader.getController()).getDialogStage().showAndWait();
 
-            ObservableList<WordsCheckController.TWord> ol = FXCollections.observableArrayList(FileTransformer.getInstance().readFile()
-                            .stream().map((w) -> new WordsCheckController.TWord(w)).collect(Collectors.toList()));
+            ObservableList<WordsCheckController.TWord> ol = FXCollections.observableArrayList(
+                    FileTransformer.getInstance().readFile()
+                            .stream().map(w -> new WordsCheckController.TWord(w)).collect(Collectors.toList()));
 
             loader = new FXMLLoader(getClass().getResource("/fxml/LoaddedWordsCheck.fxml"));
 
-            try{
+            try {
                 loader.load();
-                ((WordsCheckController)loader.getController()).setWords(ol);
-            } catch (Exception ex){
+                ((WordsCheckController) loader.getController()).setWords(ol);
+            } catch (Exception ex) {
                 ex.printStackTrace();
                 System.exit(1500);
             }
-            ((DialogController)loader.getController()).getDialogStage().showAndWait();
+            ((DialogController) loader.getController()).getDialogStage().showAndWait();
 
-            System.out.println(FileTransformer.getInstance().readFile());
+            updateWordsTable(sharedData.getCurrentSession());
         } catch (Exception e) {
             // Exception gets thrown if the fxml file could not be loaded
             e.printStackTrace();

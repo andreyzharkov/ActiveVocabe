@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import ru.dron.activevocabe.controls.PTableColumn?>
+<AnchorPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ru.dron.activevocabe.controllers.WordsCheckController" fx:id="root">
+    <children>
+        <Label text="Check words and correct them if they were not read good"
+               AnchorPane.leftAnchor="5" AnchorPane.topAnchor="5"/>
+        <TableView fx:id="tableView" AnchorPane.leftAnchor="5" AnchorPane.rightAnchor="5" AnchorPane.topAnchor="35"
+                   AnchorPane.bottomAnchor="50" prefWidth="500">
+            <columns>
+                <PTableColumn fx:id="foreignCol" text="Foreign" percentageWidth="0.4">
+                </PTableColumn>
+                <PTableColumn fx:id="translationsCol" text="Translations" percentageWidth="0.6">
+                </PTableColumn>
+            </columns>
+        </TableView>
+        <HBox AnchorPane.rightAnchor="30" AnchorPane.bottomAnchor="10" spacing="10">
+            <Button prefWidth="80.0" text="OK" onAction="#onOk"/>
+            <Button prefWidth="80.0" text="Cancel" onAction="#onCancel"/>
+        </HBox>
+    </children>
+</AnchorPane>

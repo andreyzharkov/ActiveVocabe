@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -380,6 +381,20 @@ public class RootPaneController {
             loader.load();
 
             ((DialogController) loader.getController()).getDialogStage().showAndWait();
+
+            ObservableList<WordsCheckController.TWord> ol = FXCollections.observableArrayList(FileTransformer.getInstance().readFile()
+                            .stream().map((w) -> new WordsCheckController.TWord(w)).collect(Collectors.toList()));
+
+            loader = new FXMLLoader(getClass().getResource("/fxml/LoaddedWordsCheck.fxml"));
+
+            try{
+                loader.load();
+                ((WordsCheckController)loader.getController()).setWords(ol);
+            } catch (Exception ex){
+                ex.printStackTrace();
+                System.exit(1500);
+            }
+            ((DialogController)loader.getController()).getDialogStage().showAndWait();
 
             System.out.println(FileTransformer.getInstance().readFile());
         } catch (Exception e) {

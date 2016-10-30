@@ -49,22 +49,22 @@ public class Sessions {
         return false;
     }
 
-    public boolean contains(String session){
+    public boolean contains(String session) {
         return vocabe.containsKey(session);
     }
 
-    public Set<Word> get(String key){
+    public Set<Word> get(String key) {
         return vocabe.get(key);
     }
 
-    public Collection<Set<Word>> getValues(){
+    public Collection<Set<Word>> getValues() {
         return vocabe.values();
     }
 
-    public Word getWord(Word w){
+    public Word getWord(Word w) {
         for (Set<Word> set : vocabe.values()) {
             for (Word word : set) {
-                if(word.equals(w)){
+                if (word.equals(w)) {
                     return word;
                 }
             }
@@ -74,9 +74,9 @@ public class Sessions {
         return null;
     }
 
-    public String getKeyOf(Word w){
+    public String getKeyOf(Word w) {
         for (String key : vocabe.keySet()) {
-            if(vocabe.get(key).contains(w)){
+            if (vocabe.get(key).contains(w)) {
                 return key;
             }
         }
@@ -85,37 +85,41 @@ public class Sessions {
         return null;
     }
 
-    public void rename(String oldName, String newName){
+    public void rename(String oldName, String newName) {
         Set<Word> words = vocabe.get(oldName);
         vocabe.remove(oldName);
         vocabe.put(newName, words);
     }
 
-    public void add(String session, Word w){
-        if (vocabe.containsKey(session)){
+    public void add(String session, Word w) {
+        if (vocabe.containsKey(session)) {
             vocabe.get(session).add(w);
-        } else{
+        } else {
             Set<Word> set = Collections.synchronizedSet(new LinkedHashSet<>());
             set.add(w);
             vocabe.put(session, set);
         }
     }
 
-    public void add(String session){
-        if (!contains(session)){
+    public void addAll(String session, Collection<Word> collection) {
+        vocabe.get(session).addAll(collection);
+    }
+
+    public void add(String session) {
+        if (!contains(session)) {
             vocabe.put(session, new LinkedHashSet<>());
         }
     }
 
-    public Set<String> getKeys(){
+    public Set<String> getKeys() {
         return vocabe.keySet();
     }
 
-    public Set<Word> getResentErrors(){
+    public Set<Word> getResentErrors() {
         return resentErrors;
     }
 
-    public void addError(Word w){
+    public void addError(Word w) {
         resentErrors.add(w);
     }
 

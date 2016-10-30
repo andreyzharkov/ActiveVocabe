@@ -11,9 +11,9 @@ import java.util.List;
  * Created by Andrey on 06.09.2016.
  */
 public class Word {
-    private String foreign;
-    private List<String> translations;
-    private int knowledge;
+    protected String foreign;
+    protected List<String> translations;
+    protected int knowledge;
 
     public Word(String foreign, List<String> translations) {
         this.foreign = foreign;

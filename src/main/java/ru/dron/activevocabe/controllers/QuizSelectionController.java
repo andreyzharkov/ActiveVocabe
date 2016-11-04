@@ -60,11 +60,9 @@ public class QuizSelectionController extends DialogController {
         foreignInput.setToggleGroup(inputGroup);
         translationsInput.setToggleGroup(inputGroup);
 
-        dialogStage = new Stage();
         dialogStage.setTitle("Select quiz settings");
-        dialogStage.initModality(Modality.WINDOW_MODAL);
-        dialogStage.initOwner(sharedData.getRootStage());
         Scene scene = new Scene(root);
+        scene.getStylesheets().add(SharedData.CSS_PATH);
         dialogStage.setScene(scene);
 
         sessionBox.setItems(FXCollections

@@ -8,6 +8,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import ru.dron.activevocabe.FileTransformer;
 import ru.dron.activevocabe.model.SharedData;
 
@@ -20,29 +21,27 @@ public class FileReaderController extends DialogController {
     private SharedData sharedData = SharedData.getSharedData();
 
     @FXML
-    AnchorPane root;
+    private AnchorPane root;
     @FXML
-    CheckBox removeNumbers;
+    private CheckBox removeNumbers;
     @FXML
-    CheckBox removeBrackets;
+    private CheckBox removeBrackets;
     @FXML
-    CheckBox removePunctuation;
+    private CheckBox removePunctuation;
     @FXML
-    TextField ftSepString;
+    private TextField ftSepString;
     @FXML
-    TextField trSepString;
+    private TextField trSepString;
     @FXML
-    Text filePath;
+    private Label filePath;
     @FXML
-    TextField encoding;
+    private TextField encoding;
 
     @FXML
     public void initialize() {
-        dialogStage = new Stage();
         dialogStage.setTitle("");
-        dialogStage.initModality(Modality.WINDOW_MODAL);
-        dialogStage.initOwner(sharedData.getRootStage());
         Scene scene = new Scene(root);
+        scene.getStylesheets().add(SharedData.CSS_PATH);
         dialogStage.setScene(scene);
     }
 

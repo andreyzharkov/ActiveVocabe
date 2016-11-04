@@ -5,7 +5,6 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -14,8 +13,6 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
-import org.apache.commons.lang3.StringUtils;
 import ru.dron.activevocabe.FileTransformer;
 import ru.dron.activevocabe.QuizManager;
 import ru.dron.activevocabe.model.SharedData;
@@ -67,7 +64,7 @@ public class RootPaneController {
         treeView.setCellFactory((TreeView<String> p) ->
                 new TextFieldTreeCellImpl());
         treeView.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
-            if (newValue.isLeaf()) {
+            if (newValue != null && newValue.isLeaf()) {
                 updateWordsTable(newValue.getValue());
             }
         }));

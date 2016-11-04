@@ -3,11 +3,13 @@ package ru.dron.activevocabe.controllers;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.apache.commons.lang3.StringUtils;
 import ru.dron.activevocabe.QuizManager;
 import ru.dron.activevocabe.model.QuizProperties;
@@ -33,7 +35,7 @@ public class QuizFormController extends DialogController {
     @FXML
     private AnchorPane root;
     @FXML
-    private Text question;
+    private Label question;
     @FXML
     private TextField answer;
     @FXML
@@ -44,11 +46,9 @@ public class QuizFormController extends DialogController {
         currentIndex = 0;
         resentErrors = Collections.synchronizedSet(new HashSet<>());
 
-        dialogStage = new Stage();
         dialogStage.setTitle("Quiz");
-        dialogStage.initModality(Modality.WINDOW_MODAL);
-        dialogStage.initOwner(sharedData.getRootStage());
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(root, 400, 200);
+        scene.getStylesheets().add(SharedData.CSS_PATH);
         dialogStage.setScene(scene);
 
         List<Word> questionList = new ArrayList<>();
@@ -84,7 +84,9 @@ public class QuizFormController extends DialogController {
 
 
         testList = questionList;
-////////////////////////////////////////////size > 0
+
+        assert(testList.size() > 0);
+        dialogStage.setTitle("Question 1/" + testList.size());
         if (properties.isQuestionsOnForeign()) {
             question.setText(testList.get(currentIndex).getForeign());
         } else {
@@ -115,6 +117,7 @@ public class QuizFormController extends DialogController {
             quizManager.setQuizFinished(true);
             dialogStage.close();
         } else {
+            dialogStage.setTitle("Question " + (currentIndex + 1) + "/" + testList.size());
             if (currentIndex == testList.size() - 1) {
                 nextButton.setText("Finish");
             }

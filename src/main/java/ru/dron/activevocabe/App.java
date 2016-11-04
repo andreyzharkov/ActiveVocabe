@@ -21,8 +21,7 @@ public class App extends Application {
             AnchorPane root = FXMLLoader.load(getClass().getResource("/fxml/RootPane.fxml"));
 
             Scene scene = new Scene(root, 800, 600);
-            String cssPath = "/css/styles.css";
-            scene.getStylesheets().add(cssPath);
+            scene.getStylesheets().add(SharedData.CSS_PATH);
 
             scene.widthProperty().addListener((a, b, c) -> {
                 ((PTableView)root.lookup("#tableView")).resize();

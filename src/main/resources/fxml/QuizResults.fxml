@@ -7,7 +7,7 @@
             fx:controller="ru.dron.activevocabe.controllers.QuizResultModalController">
     <children>
         <VBox fx:id="vBox" spacing="10" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10"
-              AnchorPane.rightAnchor="10" prefHeight="483">
+              AnchorPane.rightAnchor="10" AnchorPane.bottomAnchor="60" prefHeight="483">
             <children>
                 <Label fx:id="scoreLabel" text="Correct answers: "/>
                 <Label text="Remember your mistakes:"/>
@@ -18,12 +18,10 @@
                         <TableColumn fx:id="translationsCol" text="Translations" prefWidth="400">
                         </TableColumn>
                     </columns>
-                    <items>
-                    </items>
                 </TableView>
             </children>
         </VBox>
-        <HBox id="HBox" alignment="CENTER" minWidth="-1.0" spacing="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
+        <HBox id="HBox" alignment="CENTER" spacing="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
             <opaqueInsets>
                 <Insets bottom="10" top="10" left="10" right="10"/>
             </opaqueInsets>

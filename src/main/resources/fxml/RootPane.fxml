@@ -7,13 +7,11 @@
 <?import ru.dron.activevocabe.controls.PTreeView?>
 <?import ru.dron.activevocabe.controls.PTableColumn?>
 <AnchorPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="ru.dron.activevocabe.controllers.RootPaneController" fx:id="root"
-            minWidth="1000" prefHeight="600">
+            fx:controller="ru.dron.activevocabe.controllers.RootPaneController" fx:id="root">
     <children>
-        <PTreeView fx:id="treeView" prefWidth="140" prefHeight="550" AnchorPane.leftAnchor="2" AnchorPane.topAnchor="2"
+        <PTreeView fx:id="treeView" prefWidth="140" prefHeight="550" AnchorPane.leftAnchor="5" AnchorPane.topAnchor="5"
                    AnchorPane.bottomAnchor="60" percentageWidth="0.18"/>
-        <!--<Separator orientation="VERTICAL" AnchorPane.leftAnchor="212" prefHeight="-Infinity"/>-->
-        <VBox AnchorPane.topAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.bottomAnchor="60">
+        <VBox AnchorPane.topAnchor="5" AnchorPane.rightAnchor="5" AnchorPane.bottomAnchor="60" spacing="10">
             <children>
                 <Label fx:id="label" text="Words in session:"/>
                 <PTableView fx:id="tableView" percentageWidth="0.8" prefWidth="640"
@@ -34,7 +32,7 @@
         <HBox spacing="10" alignment="BASELINE_RIGHT" AnchorPane.bottomAnchor="10"
               AnchorPane.rightAnchor="10" AnchorPane.leftAnchor="200">
             <children>
-                <Label text="Add word:" prefWidth="80"/>
+                <Label text="Add word:" minWidth="100"/>
                 <TextField fx:id="newForeign" promptText="foreign word here"
                            HBox.hgrow="SOMETIMES" maxWidth="500" onAction="#onNewForeignAction"/>
                 <TextField fx:id="newTranslation" promptText="translations here"

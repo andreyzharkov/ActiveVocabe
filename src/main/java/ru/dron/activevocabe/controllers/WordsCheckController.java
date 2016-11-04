@@ -50,10 +50,7 @@ public class WordsCheckController extends DialogController {
 
     @FXML
     public void initialize() {
-        dialogStage = new Stage();
         dialogStage.setTitle("Check words");
-        dialogStage.initModality(Modality.WINDOW_MODAL);
-        dialogStage.initOwner(sharedData.getRootStage());
 
         foreignCol.setCellValueFactory(new PropertyValueFactory<>("foreign"));
         foreignCol.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -70,6 +67,7 @@ public class WordsCheckController extends DialogController {
         }
 
         Scene scene = new Scene(root);
+        scene.getStylesheets().add(SharedData.CSS_PATH);
         dialogStage.setScene(scene);
     }
 

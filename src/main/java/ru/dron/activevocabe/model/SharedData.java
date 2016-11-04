@@ -11,6 +11,7 @@ import java.io.PrintWriter;
  * Created by Andrey on 15.10.2016.
  */
 public class SharedData {
+    public static final String CSS_PATH = "/css/styles.css";
     private final String rootDirectory;
     private Sessions sessions;
     private Stage rootStage;

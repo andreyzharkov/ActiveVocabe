@@ -46,11 +46,9 @@ public class QuizResultModalController extends DialogController {
                 new SimpleStringProperty(StringUtils
                         .join(p.getValue().getTranslations(), ", ")));
 
-        dialogStage = new Stage();
         dialogStage.setTitle("Quiz results");
-        dialogStage.initModality(Modality.WINDOW_MODAL);
-        dialogStage.initOwner(SharedData.getSharedData().getRootStage());
         Scene scene = new Scene(root);
+        scene.getStylesheets().add(SharedData.CSS_PATH);
         dialogStage.setScene(scene);
 
         tableView.setItems(FXCollections.observableList(quizResult.errors

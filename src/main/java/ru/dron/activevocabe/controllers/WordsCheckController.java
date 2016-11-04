@@ -4,10 +4,15 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -25,7 +30,7 @@ import static ru.dron.activevocabe.model.Word.TRANSLATION_SEPARATOR;
  * Created by Andrey on 30.10.2016.
  */
 public class WordsCheckController extends DialogController {
-    SharedData sharedData = SharedData.getSharedData();
+    private SharedData sharedData = SharedData.getSharedData();
 
     @FXML
     private AnchorPane root;
@@ -41,6 +46,12 @@ public class WordsCheckController extends DialogController {
     public void setWords(ObservableList<TWord> words) {
         this.words = words;
         tableView.setItems(words);
+        MenuItem removeLine = new MenuItem("remove this word");
+        removeLine.setOnAction(event -> {
+            tableView.getItems().remove(tableView.getSelectionModel().getSelectedItem());
+        });
+        removeLine.setAccelerator(new KeyCodeCombination(KeyCode.DELETE, KeyCombination.CONTROL_DOWN));
+        tableView.setContextMenu(new ContextMenu(removeLine));
     }
 
     @FXML

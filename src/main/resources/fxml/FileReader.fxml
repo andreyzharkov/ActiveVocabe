@@ -19,6 +19,12 @@
             <Label text="Choose file:"/>
             <Text fx:id="filePath" text="C:\projects\debug\yy.txt"/>
             <Button onAction="#openFileChooser" prefWidth="100.0" text="choose file"/>
+            <HBox alignment="BASELINE_LEFT">
+                <children>
+                    <Label text="File encoding: "/>
+                    <TextField fx:id="encoding" text="cp1251" prefWidth="120"/>
+                </children>
+            </HBox>
         </VBox>
         <HBox id="HBox" spacing="5.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
             <children>

@@ -16,15 +16,9 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.apache.commons.lang3.StringUtils;
 import ru.dron.activevocabe.model.SharedData;
-import ru.dron.activevocabe.model.Word;
-
-import java.util.Arrays;
-import java.util.List;
+import ru.dron.activevocabe.model.TWord;
 import java.util.stream.Collectors;
-
-import static ru.dron.activevocabe.model.Word.TRANSLATION_SEPARATOR;
 
 /**
  * Created by Andrey on 30.10.2016.
@@ -90,41 +84,5 @@ public class WordsCheckController extends DialogController {
                 tableView.getItems().stream().map(TWord::getWord).collect(Collectors.toList()));
         sharedData.saveSession(sharedData.getCurrentSession());
         dialogStage.close();
-    }
-
-    public static class TWord {
-        private final SimpleStringProperty foreign;
-        private final SimpleStringProperty translation;
-
-        public TWord(Word w) {
-            this.foreign = new SimpleStringProperty(w.getForeign());
-            this.translation = new SimpleStringProperty(StringUtils
-                    .join(w.getTranslations(), TRANSLATION_SEPARATOR));
-        }
-
-        public Word getWord() {
-            String foreign = getForeign().replaceAll("(^\\s*|\\s*$)", "");
-            List<String> translations = Arrays.stream(getTranslation().split(TRANSLATION_SEPARATOR))
-                    .map(s -> s.replaceAll("(^\\s*|\\s*$)", ""))
-                    .filter(s -> !s.equals(""))
-                    .collect(Collectors.toList());
-            return new Word(foreign, translations);
-        }
-
-        public String getForeign() {
-            return foreign.get();
-        }
-
-        public void setForeign(String foreign_) {
-            foreign.set(foreign_);
-        }
-
-        public String getTranslation() {
-            return translation.get();
-        }
-
-        public void setTranslation(String tr) {
-            translation.set(tr);
-        }
     }
 }

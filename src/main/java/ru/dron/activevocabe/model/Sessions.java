@@ -85,6 +85,17 @@ public class Sessions {
         return null;
     }
 
+    public void replaceWord(String session, Word toRemove, Word toAdd) {
+        //because it's a hashset
+        vocabe.get(session).removeIf(w -> w.equals(toRemove));
+        add(session, toAdd);
+    }
+
+    public void removeWord(String session, Word toRemove) {
+        //because it's a hashset
+        vocabe.get(session).removeIf(w -> w.equals(toRemove));
+    }
+
     public void rename(String oldName, String newName) {
         Set<Word> words = vocabe.get(oldName);
         vocabe.remove(oldName);

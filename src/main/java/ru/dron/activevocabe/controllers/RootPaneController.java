@@ -8,7 +8,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
@@ -16,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import ru.dron.activevocabe.FileTransformer;
 import ru.dron.activevocabe.QuizManager;
 import ru.dron.activevocabe.model.SharedData;
+import ru.dron.activevocabe.model.TWord;
 import ru.dron.activevocabe.model.Word;
 
 import java.io.*;
@@ -38,13 +43,17 @@ public class RootPaneController {
     @FXML
     private Label label;
     @FXML
-    private TableView<Word> tableView;
+    private TableView<TWord> tableView;
     @FXML
-    private TableColumn<Word, String> foreignCol;
+    private TableColumn<TWord, String> foreignCol;
     @FXML
-    private TableColumn<Word, String> translationsCol;
+    private TableColumn<TWord, String> translationsCol;
     @FXML
     private TreeView<String> treeView;
+    @FXML
+    private TextField newForeign;
+    @FXML
+    private TextField newTranslation;
 
     @FXML
     public void initialize() {
@@ -58,17 +67,41 @@ public class RootPaneController {
                 new TextFieldTreeCellImpl());
 
 
-        foreignCol.setCellValueFactory(p ->
-                new SimpleStringProperty(p.getValue().getForeign()));
-        translationsCol.setCellValueFactory(p ->
-                new SimpleStringProperty(StringUtils
-                        .join(p.getValue().getTranslations(), TRANSLATION_SEPARATOR)));
+        foreignCol.setCellValueFactory(new PropertyValueFactory<>("foreign"));
+        foreignCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        translationsCol.setCellValueFactory(new PropertyValueFactory<>("translation"));
+        translationsCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        foreignCol.setOnEditCommit((t) -> {
+            TWord curr = t.getTableView().getItems().get(t.getTablePosition().getRow());
+            Word prev = curr.getWord();
+            curr.setForeign(t.getNewValue());
+            Word newword = curr.getWord();
+            sharedData.getSessions().replaceWord(sharedData.getCurrentSession(), prev, newword);
+            sharedData.saveSession(sharedData.getCurrentSession());
+        });
+        translationsCol.setOnEditCommit((t) -> {
+            TWord curr = t.getTableView().getItems().get(t.getTablePosition().getRow());
+            Word prev = curr.getWord();
+            curr.setTranslation(t.getNewValue());
+            Word newword = curr.getWord();
+            sharedData.getSessions().replaceWord(sharedData.getCurrentSession(), prev, newword);
+            sharedData.saveSession(sharedData.getCurrentSession());
+        });
+
+        MenuItem removeLine = new MenuItem("remove this word");
+        removeLine.setOnAction(event -> {
+            sharedData.getSessions().removeWord(sharedData.getCurrentSession(),
+                    tableView.getSelectionModel().getSelectedItem().getWord());
+            tableView.getItems().remove(tableView.getSelectionModel().getSelectedItem());
+        });
+        removeLine.setAccelerator(new KeyCodeCombination(KeyCode.DELETE, KeyCombination.CONTROL_DOWN));
+        tableView.setContextMenu(new ContextMenu(removeLine));
     }
 
     private void updateWordsTable(String session) {
         sharedData.setCurrentSession(session);
-        ObservableList<Word> items = FXCollections.observableList(sharedData.getSessions().get(session)
-                .stream().collect(Collectors.toList()));
+        ObservableList<TWord> items = FXCollections.observableList(sharedData.getSessions().get(session)
+                .stream().map(TWord::new).collect(Collectors.toList()));
         tableView.setItems(items);
 
         label.setText("Words in session " + session + ":");
@@ -381,9 +414,9 @@ public class RootPaneController {
 
             ((DialogController) loader.getController()).getDialogStage().showAndWait();
 
-            ObservableList<WordsCheckController.TWord> ol = FXCollections.observableArrayList(
+            ObservableList<TWord> ol = FXCollections.observableArrayList(
                     FileTransformer.getInstance().readFile()
-                            .stream().map(w -> new WordsCheckController.TWord(w)).collect(Collectors.toList()));
+                            .stream().map(w -> new TWord(w)).collect(Collectors.toList()));
 
             loader = new FXMLLoader(getClass().getResource("/fxml/LoaddedWordsCheck.fxml"));
 
@@ -402,5 +435,30 @@ public class RootPaneController {
             e.printStackTrace();
             System.exit(1500);
         }
+    }
+
+    @FXML
+    private void onQuiz() {
+        QuizManager.getInstance().run();
+    }
+
+    @FXML
+    private void onAddWord() {
+        if (!newForeign.getText().matches("\\s*") && !newTranslation.getText().matches("\\s*")) {
+            Word w = new Word(newForeign.getText(), newTranslation.getText());
+            sharedData.getSessions().add(sharedData.getCurrentSession(), w);
+            sharedData.saveSession(sharedData.getCurrentSession());
+            tableView.getItems().add(new TWord(w));
+
+            newForeign.clear();
+            newTranslation.clear();
+            newForeign.requestFocus();
+        }
+    }
+
+    @FXML
+    private void onNewForeignAction() {
+        newTranslation.clear();
+        newTranslation.requestFocus();
     }
 }

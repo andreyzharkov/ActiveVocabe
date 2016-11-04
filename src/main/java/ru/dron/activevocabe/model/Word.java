@@ -2,10 +2,8 @@ package ru.dron.activevocabe.model;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by Andrey on 06.09.2016.
@@ -33,6 +31,17 @@ public class Word {
             }
         });
         this.knowledge = knowledge;
+    }
+
+    //this constructor removes any extra whitespaces in foreign and translations
+    //so it is convenient to call it from raw strings
+    public Word(String foreign, String translation) {
+        this.foreign = removeExtraWhiteSpaces(foreign);
+        this.translations = Arrays.stream(translation.split(TRANSLATION_SEPARATOR.replaceAll("\\s", "")))
+                .map(Word::removeExtraWhiteSpaces)
+                .filter(s -> !s.equals(""))
+                .collect(Collectors.toList());
+        knowledge = 0;
     }
 
     public String getForeign() {
@@ -81,5 +90,13 @@ public class Word {
         return String.join(System.lineSeparator(), foreign, "[",
                 StringUtils.join(translations, System.lineSeparator()),
                 "]", Integer.toString(knowledge));
+    }
+
+    public static String removeExtraWhiteSpaces(String str) {
+        if (str.matches("\\s*")) return "";
+        return Arrays.stream(str.split("\\s"))
+                .filter(s -> !s.equals(""))
+                .reduce("", (s1, s2) -> s1 + " " + s2)
+                .substring(1);
     }
 }

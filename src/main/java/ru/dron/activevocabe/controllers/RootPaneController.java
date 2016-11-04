@@ -1,6 +1,5 @@
 package ru.dron.activevocabe.controllers;
 
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -30,8 +29,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ru.dron.activevocabe.model.Word.TRANSLATION_SEPARATOR;
-
 /**
  * Created by Andrey on 15.10.2016.
  */
@@ -55,8 +52,12 @@ public class RootPaneController {
     @FXML
     private TextField newTranslation;
 
+    private ContextMenu sessionMenu;
+    private ContextMenu folderMenu;
+
     @FXML
     public void initialize() {
+        //treeView initialization
         sharedData.setTreeView(treeView);
 
         FilePathTreeItem root = new FilePathTreeItem(new File(sharedData.getRootDirectory()));
@@ -65,8 +66,14 @@ public class RootPaneController {
         treeView.setEditable(true);
         treeView.setCellFactory((TreeView<String> p) ->
                 new TextFieldTreeCellImpl());
+        treeView.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
+            if (newValue.isLeaf()) {
+                updateWordsTable(newValue.getValue());
+            }
+        }));
+        initializeTreeViewMenus();
 
-
+        //tableView initialization
         foreignCol.setCellValueFactory(new PropertyValueFactory<>("foreign"));
         foreignCol.setCellFactory(TextFieldTableCell.forTableColumn());
         translationsCol.setCellValueFactory(new PropertyValueFactory<>("translation"));
@@ -204,56 +211,8 @@ public class RootPaneController {
         }
     }
 
-    private final class TextFieldTreeCellImpl extends TreeCell<String> {
-
+    private class TextFieldTreeCellImpl extends TreeCell<String> {
         private TextField textField;
-        private final ContextMenu folderMenu = new ContextMenu();
-        private final ContextMenu sessionMenu = new ContextMenu();
-
-        TextFieldTreeCellImpl() {
-            MenuItem addMenuItem = new MenuItem("Add Session");
-            addMenuItem.setOnAction((ActionEvent t) -> {
-                String newSession = "s" + Integer.toString((new Random()).nextInt());
-                File file = new File(((FilePathTreeItem) getTreeItem()).getFullPath(), newSession);
-                while (file.exists()) {
-                    newSession = "s" + Integer.toString((new Random()).nextInt());
-                    file = new File(((FilePathTreeItem) getTreeItem()).getFullPath(), newSession);
-                }
-                sharedData.getSessions().add("new session");
-
-                getTreeItem().getChildren().add(new FilePathTreeItem(file, "new session"));
-            });
-
-            MenuItem addDirItem = new MenuItem("Add Folder");
-            addDirItem.setOnAction((ActionEvent t) -> {
-                File f = new File(((FilePathTreeItem) getTreeItem()).getFullPath(), "new folder");
-                try {
-                    Path toDir = Files.createDirectory(Paths.get(f.getPath()));
-                    getTreeItem().getChildren().add(new FilePathTreeItem(toDir.toFile()));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.exit(3);
-                }
-            });
-
-            folderMenu.getItems().addAll(addDirItem, addMenuItem);
-
-            MenuItem addWordsItem = new MenuItem("Add word");
-            MenuItem viewWordsItem = new MenuItem("View words");
-            MenuItem startQuiz = new MenuItem("quiz");
-
-            viewWordsItem.setOnAction((e) -> {
-                updateWordsTable(((FilePathTreeItem) getTreeItem()).sessionName);
-            });
-            addWordsItem.setOnAction((e) -> {
-                showAddWordPane(((FilePathTreeItem) getTreeItem()).sessionName);
-            });
-            startQuiz.setOnAction((e) -> {
-                QuizManager.getInstance().run();
-            });
-
-            sessionMenu.getItems().addAll(addWordsItem, viewWordsItem, startQuiz);
-        }
 
         @Override
         public void startEdit() {
@@ -342,7 +301,7 @@ public class RootPaneController {
                 } else {
                     setText(getTreeItem().getValue());
                     setGraphic(getTreeItem().getGraphic());
-                    if (!getTreeItem().isLeaf()) {
+                    if (((FilePathTreeItem)getTreeItem()).isDirectory()) {
                         setContextMenu(folderMenu);
                     } else {
                         setContextMenu(sessionMenu);
@@ -366,44 +325,6 @@ public class RootPaneController {
         private String getString() {
             return getItem() == null ? "" : getItem();
         }
-    }
-
-    private void showAddWordPane(String session) {
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setOpaqueInsets(new Insets(10, 10, 10, 10));
-
-        TextField foreign = new TextField();
-        foreign.setPromptText("foreign");
-        TextField translation = new TextField();
-        translation.setPromptText("tr-s, sep is \';\'");
-        foreign.setOnAction((e) -> translation.requestFocus());
-        translation.setOnAction((e) -> {
-            List<String> tr = new ArrayList<>();
-            Arrays.asList(translation.getText().split(";")).forEach(t -> {
-                if (!t.equals("") && !t.matches("\\s")) {
-                    tr.add(StringUtils.join(Arrays.stream(t.split("\\s"))
-                            .filter(s -> !s.equals(""))
-                            .collect(Collectors.toList()), " "));
-                }
-            });
-            System.out.println(tr);
-            sharedData.getSessions().get(session).add(new Word(foreign.getText(), tr));
-            sharedData.saveSession(session);
-            foreign.clear();
-            translation.clear();
-            foreign.requestFocus();
-        });
-
-        grid.addRow(0, foreign, translation);
-        Dialog<Boolean> dialog = new Dialog<>();
-        DialogPane dialogPane = new DialogPane();
-        dialogPane.setContent(grid);
-        dialog.setDialogPane(dialogPane);
-        dialog.setTitle("Add new word to session " + session);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-        dialog.showAndWait();
     }
 
     @FXML
@@ -460,5 +381,42 @@ public class RootPaneController {
     private void onNewForeignAction() {
         newTranslation.clear();
         newTranslation.requestFocus();
+    }
+
+    private void initializeTreeViewMenus(){
+
+        MenuItem startQuiz = new MenuItem("Quiz");
+        startQuiz.setOnAction((e) -> {
+            QuizManager.getInstance().run(treeView.getSelectionModel().getSelectedItem().getValue());
+        });
+        startQuiz.setAccelerator(new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN));
+        sessionMenu = new ContextMenu(startQuiz);
+
+        MenuItem addMenuItem = new MenuItem("Add Session");
+        addMenuItem.setOnAction((ActionEvent t) -> {
+            FilePathTreeItem item = (FilePathTreeItem) treeView.getSelectionModel().getSelectedItem();
+            String newSession = "s" + Integer.toString((new Random()).nextInt());
+            File file = new File(item.getFullPath(), newSession);
+            while (file.exists()) {
+                newSession = "s" + Integer.toString((new Random()).nextInt());
+                file = new File(item.getFullPath(), newSession);
+            }
+            sharedData.getSessions().add("new session");
+
+            item.getChildren().add(new FilePathTreeItem(file, "new session"));
+        });
+        MenuItem addDirItem = new MenuItem("Add Folder");
+        addDirItem.setOnAction((ActionEvent t) -> {
+            FilePathTreeItem item = (FilePathTreeItem) treeView.getSelectionModel().getSelectedItem();
+            File f = new File(item.getFullPath(), "new folder");
+            try {
+                Path toDir = Files.createDirectory(Paths.get(f.getPath()));
+                item.getChildren().add(new FilePathTreeItem(toDir.toFile()));
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(3);
+            }
+        });
+        folderMenu = new ContextMenu(addDirItem, addMenuItem);
     }
 }

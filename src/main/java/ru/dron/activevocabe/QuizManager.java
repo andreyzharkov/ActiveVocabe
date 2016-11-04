@@ -38,6 +38,16 @@ public class QuizManager {
         }
     }
 
+    public void run(String session){
+        setQuizSelectionFinished(true);
+        sharedData.setLastQuizProperties(
+                new QuizProperties(
+                        QuizProperties.QuizType.SESSION, Integer.MAX_VALUE, false, session
+                )
+        );
+        showQuizDialog();
+    }
+
     private void showQuizDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/QuizForm.fxml"));

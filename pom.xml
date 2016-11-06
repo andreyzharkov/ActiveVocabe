@@ -4,7 +4,7 @@
 
   <groupId>ru.dron</groupId>
   <artifactId>ActiveVocabe</artifactId>
-  <version>0.31</version>
+  <version>0.78</version>
   <packaging>jar</packaging>
 
   <name>ActiveVocabe</name>
@@ -20,6 +20,11 @@
       <artifactId>junit</artifactId>
       <version>3.8.1</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.zenjava</groupId>
+      <artifactId>javafx-maven-plugin</artifactId>
+      <version>8.7.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -64,6 +69,25 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.zenjava</groupId>
+        <artifactId>javafx-maven-plugin</artifactId>
+        <version>8.6.0</version>
+        <configuration>
+          <mainClass>ru.dron.activevocabe.App</mainClass>
+          <vendor>dron</vendor>
+          <appName>ActiveVocabe</appName>
+          <identifier>100500</identifier>
+          <verbose>true</verbose>
+          <needShortcut>true</needShortcut>
+          <needMenu>true</needMenu>
+          <bundleArguments>
+            <!--<win.menuGroup>DronWorks</win.menuGroup>-->
+            <!--<licenseFile>License</licenseFile>-->
+            <installdirChooser>true</installdirChooser>
+          </bundleArguments>
+        </configuration>
       </plugin>
     </plugins>
   </build>

@@ -1,5 +1,5 @@
 # ActiveVocabe
-Simple app to remember new foreign words.
+Simple app to remember new foreign words. Project is in development still and there are minor bugs.
 
 ![ActiveVocabe](https://cloud.githubusercontent.com/assets/14358106/25313974/a859675c-2842-11e7-8961-d90588bef8be.png)
 
@@ -11,8 +11,8 @@ app will ask you several questions to check your understanding.
 
 <img src="https://cloud.githubusercontent.com/assets/14358106/25314033/530d4528-2844-11e7-82b5-050eccf0b2e2.png" width="248">
 
-Actually, only exact answers considered correct. For the exaple above correct answers will be 'преследование' or 'стремление',
-(any of them)
+Actually, only exact answers considered correct. For the example above correct answers will be 'преследование' or 'стремление'
+(any of them),
 because only these two are in the table as translations.
 
 After the quiz ended you will see your score and mistakes. You may repass quiz if you want to achieve better results.
